@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RentSet — Property Turnover OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#FAFAF8;--bg2:#F4F2ED;--bg3:#ECEAE3;
+  --surface:#FFFFFF;
+  --text:#1C1A17;--text2:#6B6455;--text3:#A09880;--text4:#C8BFB0;
+  --accent:#1A6B50;--accent2:#228B68;--accent-light:#EBF5F0;--accent-border:#B8D9CE;
+  --gold:#C4973A;--gold-light:#FAF3E7;--gold-border:#E8D4A8;
+  --border:#E8E4DC;--border2:#D4CFC5;
+  --danger:#C0392B;--danger-bg:#FDF2F1;--danger-border:#F0C5C0;
+  --warn:#A07020;--warn-bg:#FDF8EE;--warn-border:#E8D4A8;
+  --radius:10px;--radius-sm:6px;--radius-lg:16px;--radius-xl:24px;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:0 20px 60px rgba(0,0,0,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+#landing{display:block;}#auth-section{display:none;}#app-section{display:none;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 72px;height:68px;display:flex;align-items:center;justify-content:space-between;background:rgba(250,250,248,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--text);letter-spacing:0.5px;}
+.nav-logo span{color:var(--accent);}
+.nav-links{display:flex;gap:36px;}
+.nav-links a{font-size:13px;color:var(--text2);text-decoration:none;transition:color 0.2s;}
+.nav-links a:hover{color:var(--text);}
+.nav-cta{font-size:13px;padding:9px 22px;border-radius:var(--radius-sm);background:var(--accent);color:white;border:none;cursor:pointer;font-family:inherit;font-weight:500;transition:background 0.2s;}
+.nav-cta:hover{background:var(--accent2);}
+
+/* HERO */
+.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:100px 72px 60px;gap:80px;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:24px;padding:6px 12px;border-radius:20px;border:1px solid var(--accent-border);background:var(--accent-light);}
+.hero-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);}
+h1{font-family:'Cormorant Garamond',serif;font-size:68px;font-weight:400;line-height:1.05;letter-spacing:-1px;color:var(--text);margin-bottom:24px;}
+h1 em{font-style:italic;color:var(--accent);}
+.hero-sub{font-size:16px;color:var(--text2);line-height:1.75;margin-bottom:40px;font-weight:300;max-width:420px;}
+.hero-actions{display:flex;gap:12px;align-items:center;margin-bottom:48px;}
+.btn-primary-l{font-size:13px;padding:12px 26px;border-radius:var(--radius-sm);background:var(--accent);color:white;border:none;cursor:pointer;font-family:inherit;font-weight:500;transition:all 0.2s;}
+.btn-primary-l:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn-ghost-l{font-size:13px;padding:11px 22px;border-radius:var(--radius-sm);background:transparent;color:var(--text2);border:1px solid var(--border2);cursor:pointer;font-family:inherit;transition:all 0.2s;}
+.btn-ghost-l:hover{border-color:var(--text3);color:var(--text);}
+.hero-stats{display:flex;gap:36px;padding-top:36px;border-top:1px solid var(--border);}
+.stat-v{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:500;color:var(--text);}
+.stat-l{font-size:11px;color:var(--text3);margin-top:3px;}
+.hero-right{position:relative;}
+.hero-photo-main{border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lg);height:580px;}
+.hero-photo-main img{width:100%;height:100%;object-fit:cover;display:block;}
+.hero-photo-card{position:absolute;bottom:28px;left:-36px;background:white;border-radius:var(--radius-lg);padding:16px 20px;box-shadow:var(--shadow-md);border:1px solid var(--border);min-width:220px;}
+.hpc-label{font-size:10px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;}
+.hpc-prop{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.hpc-name{font-size:12px;font-weight:500;color:var(--text);}
+.hpc-bar{height:2px;background:var(--bg3);border-radius:2px;margin-top:3px;}
+.hpc-fill{height:100%;border-radius:2px;}
+.hero-photo-badge{position:absolute;top:28px;right:-20px;background:white;border-radius:var(--radius-lg);padding:14px 18px;box-shadow:var(--shadow-md);border:1px solid var(--border);}
+.hpb-num{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--accent);line-height:1;}
+.hpb-label{font-size:11px;color:var(--text2);margin-top:3px;}
+
+/* SECTIONS */
+.section{padding:100px 72px;}
+.section-alt{background:var(--bg2);}
+.section-hdr{margin-bottom:60px;}
+.section-hdr.center{text-align:center;}
+.eyebrow{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;}
+h2{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:400;line-height:1.1;letter-spacing:-0.5px;color:var(--text);}
+h2 em{font-style:italic;color:var(--accent);}
+.section-sub{font-size:15px;color:var(--text2);margin-top:14px;font-weight:300;line-height:1.7;max-width:500px;}
+.section-hdr.center .section-sub{margin-left:auto;margin-right:auto;}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.feature{background:var(--surface);padding:36px 32px;transition:background 0.2s;}
+.feature:hover{background:var(--bg2);}
+.feat-icon{width:42px;height:42px;border-radius:10px;background:var(--accent-light);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:18px;}
+.feat-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:10px;}
+.feat-desc{font-size:13px;color:var(--text2);line-height:1.75;font-weight:300;}
+.steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;margin-top:60px;}
+.steps-grid::before{content:'';position:absolute;top:26px;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,var(--accent-border),transparent);}
+.step-item{text-align:center;padding:0 24px;position:relative;}
+.step-num{width:52px;height:52px;border-radius:50%;background:var(--surface);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--accent);position:relative;z-index:1;box-shadow:var(--shadow);}
+.step-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:10px;}
+.step-desc{font-size:13px;color:var(--text2);line-height:1.7;font-weight:300;}
+.photo-grid{display:grid;grid-template-columns:1.3fr 0.7fr;gap:16px;margin-top:60px;}
+.photo-main-l{border-radius:var(--radius-xl);overflow:hidden;position:relative;box-shadow:var(--shadow-lg);}
+.photo-main-l img{width:100%;height:480px;object-fit:cover;display:block;}
+.photo-overlay-l{position:absolute;bottom:0;left:0;right:0;padding:32px;background:linear-gradient(transparent,rgba(20,18,15,0.75));}
+.photo-overlay-title{font-family:'Cormorant Garamond',serif;font-size:22px;color:white;margin-bottom:6px;font-weight:400;}
+.photo-overlay-sub{font-size:12px;color:rgba(255,255,255,0.7);}
+.photo-stack-l{display:flex;flex-direction:column;gap:16px;}
+.photo-sm{border-radius:var(--radius-lg);overflow:hidden;position:relative;flex:1;box-shadow:var(--shadow);}
+.photo-sm img{width:100%;height:100%;object-fit:cover;display:block;min-height:220px;}
+.photo-sm-overlay{position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(20,18,15,0.7));}
+.providers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:60px;}
+.prov-card-l{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:all 0.2s;box-shadow:var(--shadow);}
+.prov-card-l:hover{border-color:var(--accent-border);transform:translateY(-3px);box-shadow:var(--shadow-md);}
+.prov-av-l{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;margin-bottom:14px;}
+.prov-name-l{font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px;}
+.prov-type-l{font-size:12px;color:var(--text3);margin-bottom:10px;}
+.stars-l{color:var(--gold);font-size:13px;}
+.prov-rate-l{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5;}
+.cta-section{padding:120px 72px;text-align:center;background:var(--text);position:relative;overflow:hidden;}
+.cta-bg-img{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1400&q=60') center/cover;opacity:0.12;}
+.cta-content{position:relative;z-index:1;}
+.cta-eyebrow{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:20px;}
+.cta-h2{font-family:'Cormorant Garamond',serif;font-size:56px;font-weight:400;color:white;line-height:1.1;margin-bottom:20px;}
+.cta-h2 em{font-style:italic;color:var(--accent2);}
+.cta-sub{font-size:15px;color:rgba(255,255,255,0.55);max-width:420px;margin:0 auto 44px;font-weight:300;line-height:1.7;}
+.cta-actions{display:flex;gap:14px;justify-content:center;}
+.btn-cta{font-size:14px;padding:14px 32px;border-radius:var(--radius-sm);background:var(--accent);color:white;border:none;cursor:pointer;font-family:inherit;font-weight:500;transition:all 0.2s;}
+.btn-cta:hover{background:var(--accent2);}
+.btn-cta-ghost{font-size:14px;padding:13px 28px;border-radius:var(--radius-sm);background:transparent;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.2);cursor:pointer;font-family:inherit;}
+footer{padding:40px 72px;background:var(--text);border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:20px;color:white;}
+.footer-logo span{color:var(--accent2);}
+.footer-copy{font-size:12px;color:rgba(255,255,255,0.35);}
+
+/* AUTH */
+.auth-screen{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:var(--bg);}
+.auth-left{position:relative;overflow:hidden;}
+.auth-left img{width:100%;height:100%;object-fit:cover;display:block;}
+.auth-left-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(26,107,80,0.8),rgba(20,18,15,0.6));display:flex;flex-direction:column;justify-content:space-between;padding:48px;}
+.auth-left-logo{font-family:'Cormorant Garamond',serif;font-size:24px;color:white;}
+.auth-left-logo span{color:var(--accent2);}
+.auth-left-quote{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;font-style:italic;color:white;line-height:1.4;max-width:320px;}
+.auth-right{display:flex;align-items:center;justify-content:center;padding:60px;}
+.auth-form-wrap{width:100%;max-width:380px;}
+.auth-form-logo{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text);margin-bottom:36px;}
+.auth-form-logo span{color:var(--accent);}
+.auth-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;color:var(--text);margin-bottom:6px;}
+.auth-sub{font-size:13px;color:var(--text2);margin-bottom:32px;font-weight:300;}
+.form-group{margin-bottom:16px;}
+.form-label{font-size:12px;color:var(--text2);margin-bottom:7px;display:block;font-weight:500;}
+.form-input{width:100%;padding:11px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color 0.2s;}
+.form-input:focus{border-color:var(--accent);}
+.form-input::placeholder{color:var(--text4);}
+.auth-btn{width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--accent);color:white;border:none;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;margin-top:8px;transition:background 0.2s;}
+.auth-btn:hover{background:var(--accent2);}
+.auth-switch{font-size:12px;color:var(--text3);text-align:center;margin-top:20px;}
+.auth-switch a{color:var(--accent);cursor:pointer;}
+.auth-view{display:none;}
+.auth-view.active{display:block;}
+.onboard-progress{display:flex;gap:6px;margin-bottom:28px;}
+.op-dot{height:3px;border-radius:2px;background:var(--bg3);transition:all 0.3s;flex:1;}
+.op-dot.active{background:var(--accent);}
+.op-dot.done{background:var(--accent-border);}
+.onboard-step{display:none;}
+.onboard-step.active{display:block;}
+.onboard-icon{width:52px;height:52px;border-radius:12px;background:var(--accent-light);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+.prop-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
+.prop-type-btn{padding:12px;border-radius:var(--radius-sm);background:var(--bg2);border:1px solid var(--border);cursor:pointer;text-align:center;transition:all 0.2s;}
+.prop-type-btn:hover,.prop-type-btn.sel{border-color:var(--accent);background:var(--accent-light);}
+.prop-type-btn i{font-size:18px;color:var(--text3);display:block;margin-bottom:5px;}
+.prop-type-btn.sel i{color:var(--accent);}
+.prop-type-label{font-size:11px;color:var(--text2);}
+.prop-type-btn.sel .prop-type-label{color:var(--accent);}
+
+/* ===== APP LAYOUT ===== */
+.app-layout{display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:230px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text);letter-spacing:0.5px;}
+.logo-text span{color:var(--accent);}
+.logo-sub{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:0.04em;}
+.app-nav{padding:10px 0;flex:1;overflow-y:auto;}
+.nav-section-lbl{font-size:9px;color:var(--text4);letter-spacing:0.1em;text-transform:uppercase;padding:14px 20px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:var(--text2);cursor:pointer;transition:all 0.15s;border-right:2px solid transparent;position:relative;}
+.nav-item:hover{background:var(--bg2);color:var(--text);}
+.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:500;border-right-color:var(--accent);}
+.nav-item i{font-size:16px;opacity:0.6;}
+.nav-item.active i{opacity:1;}
+.nav-badge{margin-left:auto;font-size:9px;padding:2px 6px;border-radius:10px;background:var(--danger);color:white;font-weight:500;}
+.nav-badge-warn{margin-left:auto;font-size:9px;padding:2px 6px;border-radius:10px;background:var(--warn);color:white;font-weight:500;}
+.sidebar-bottom{padding:16px 20px;border-top:1px solid var(--border);}
+.back-home-link{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);cursor:pointer;margin-bottom:12px;transition:color 0.15s;}
+.back-home-link:hover{color:var(--text2);}
+.user-row{display:flex;align-items:center;gap:10px;}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-light);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--accent);flex-shrink:0;}
+.user-name{font-size:12px;color:var(--text);font-weight:500;}
+.user-plan{font-size:10px;color:var(--text3);}
+
+/* MAIN */
+.app-main{flex:1;overflow-y:auto;background:var(--bg);}
+.app-page{display:none;padding:0;}
+.app-page.active{display:block;}
+
+/* PAGE HEADER */
+.page-header{padding:28px 32px 0;margin-bottom:28px;border-bottom:1px solid var(--border);padding-bottom:22px;display:flex;align-items:flex-end;justify-content:space-between;}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:var(--text);letter-spacing:-0.3px;}
+.page-sub{font-size:12px;color:var(--text3);margin-top:4px;}
+.page-body{padding:0 32px 32px;}
+
+/* BUTTONS */
+.btn-app{font-size:12px;padding:9px 18px;border-radius:var(--radius-sm);background:var(--accent);color:white;border:none;cursor:pointer;font-family:inherit;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:background 0.2s;}
+.btn-app:hover{background:var(--accent2);}
+.btn-outline{font-size:12px;padding:8px 14px;border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);border:1px solid var(--border2);cursor:pointer;font-family:inherit;transition:all 0.2s;box-shadow:var(--shadow);}
+.btn-outline:hover{background:var(--bg2);color:var(--text);}
+
+/* METRICS */
+.metrics-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:28px;}
+.met-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.met-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-border);}
+.met-card.danger::before{background:var(--danger-border);}
+.met-card.warn::before{background:var(--warn-border);}
+.met-card.good::before{background:var(--accent-border);}
+.met-l{font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:0.02em;}
+.met-v{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--text);letter-spacing:-0.5px;line-height:1;}
+.met-v.warn{color:var(--warn);}
+.met-v.danger{color:var(--danger);}
+.met-v.good{color:var(--accent);}
+.met-trend{font-size:11px;color:var(--text3);margin-top:6px;}
+
+/* ALERTS */
+.alerts{margin-bottom:24px;}
+.alert{border-radius:var(--radius);padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.alert-danger{background:var(--danger-bg);border:1px solid var(--danger-border);}
+.alert-warn{background:var(--warn-bg);border:1px solid var(--warn-border);}
+.alert-text{font-size:13px;color:var(--text);flex:1;line-height:1.5;}
+.alert-btn{font-size:11px;padding:6px 14px;border-radius:var(--radius-sm);background:var(--danger);color:white;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:500;}
+.alert-btn-warn{font-size:11px;padding:6px 14px;border-radius:var(--radius-sm);background:var(--warn);color:white;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:500;}
+
+/* DASHBOARD GRID */
+.dash-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:20px;}
+.sec-lbl{font-size:10px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;}
+
+/* PROPERTY CARDS */
+.prop-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:all 0.2s;box-shadow:var(--shadow);}
+.prop-card:hover{border-color:var(--accent-border);box-shadow:var(--shadow-md);}
+.prop-card.sel{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,107,80,0.08);}
+.prop-card.dashed{border-style:dashed;box-shadow:none;background:transparent;}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
+.pn{font-size:13px;font-weight:500;color:var(--text);}
+.pa{font-size:11px;color:var(--text3);margin-top:1px;}
+.pi{font-size:11px;color:var(--text2);margin-top:6px;}
+.pgb{height:3px;background:var(--bg3);border-radius:2px;margin-top:10px;}
+.pgf{height:100%;border-radius:2px;transition:width 0.4s;}
+
+/* PILLS */
+.pill{font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.p-warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border);}
+.p-danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);}
+.p-good{background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-border);}
+
+/* TAGS */
+.tag{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:500;white-space:nowrap;display:inline-block;}
+.tag-law{background:#EEF4FB;color:#2E6DA4;}
+.tag-done{background:var(--accent-light);color:var(--accent);}
+.tag-blocked{background:var(--danger-bg);color:var(--danger);}
+.tag-due{background:var(--warn-bg);color:var(--warn);}
+.tag-pro{background:#F3F0FA;color:#6B5DB0;}
+
+/* TIMELINE PANEL */
+.tl-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);}
+.tl-panel-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.tl-panel-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--text);}
+.tl-panel-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+.tl-target{font-size:12px;font-weight:500;padding:4px 10px;border-radius:20px;}
+.tlm{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:16px;}
+.tm{background:var(--bg2);border-radius:var(--radius-sm);padding:10px 12px;}
+.tml{font-size:9px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;}
+.tmv{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--text);}
+.tmv.warn{color:var(--warn);}
+.tmv.danger{color:var(--danger);}
+.tmv.good{color:var(--accent);}
+.ph-lbl{font-size:9px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin:14px 0 8px;display:flex;align-items:center;gap:8px;}
+.ph-lbl::after{content:'';flex:1;height:1px;background:var(--border);}
+.tli{display:flex;gap:10px;align-items:flex-start;margin-bottom:4px;}
+.tll{display:flex;flex-direction:column;align-items:center;width:22px;flex-shrink:0;}
+.tlc{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;flex-shrink:0;}
+.cd{background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent-border);}
+.ca{background:var(--warn-bg);color:var(--warn);border:1.5px solid var(--warn-border);}
+.cb{background:var(--danger-bg);color:var(--danger);border:1.5px solid var(--danger-border);}
+.cp{background:var(--bg2);color:var(--text3);border:1.5px solid var(--border2);}
+.tl-ln{width:1.5px;flex:1;min-height:6px;background:var(--border);}
+.tl-ln.d{background:var(--accent-border);}
+.tlcard{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:4px;}
+.tlcard.blk{border-color:var(--danger-border);background:var(--danger-bg);}
+.tlr{display:flex;justify-content:space-between;gap:6px;}
+.tln{font-size:12px;color:var(--text);}
+.tln.d{color:var(--text3);text-decoration:line-through;}
+.tln.b{color:var(--danger);}
+.tln.p{color:var(--text2);}
+.tld{font-size:11px;color:var(--text3);white-space:nowrap;}
+.tldet{font-size:10px;color:var(--text2);margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;align-items:center;}
+
+/* PROVIDERS */
+.prov-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+.prov-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:all 0.2s;box-shadow:var(--shadow);}
+.prov-card:hover{border-color:var(--accent-border);transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.prov-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.prov-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;flex-shrink:0;}
+.prov-name{font-size:14px;font-weight:500;color:var(--text);}
+.prov-type{font-size:11px;color:var(--text3);}
+.stars{font-size:13px;color:var(--gold);}
+.prov-info{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6;}
+.filter-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-btn{font-size:11px;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit;border:1px solid var(--border2);background:var(--surface);color:var(--text2);transition:all 0.2s;box-shadow:var(--shadow);}
+.filter-btn.active{background:var(--accent);color:white;border-color:var(--accent);}
+
+/* LISTINGS */
+.list-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:14px;box-shadow:var(--shadow);}
+.list-card-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.list-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--text);}
+.list-price{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--accent);}
+.list-detail{font-size:13px;color:var(--text2);margin:8px 0 14px;line-height:1.7;font-weight:300;}
+.platform-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.plat{font-size:11px;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--border2);color:var(--text2);background:var(--bg2);}
+.plat.live{background:var(--accent-light);color:var(--accent);border-color:var(--accent-border);}
+.list-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.ls{background:var(--bg2);border-radius:var(--radius);padding:14px;text-align:center;}
+.ls-v{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--text);}
+.ls-l{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* DOCUMENTS */
+.doc-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);}
+.doc-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);transition:background 0.15s;}
+.doc-row:last-child{border-bottom:none;}
+.doc-row:hover{background:var(--bg2);}
+.doc-icon{width:38px;height:38px;border-radius:var(--radius-sm);background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border);}
+.doc-icon i{font-size:16px;color:var(--text2);}
+.doc-name{font-size:13px;color:var(--text);font-weight:400;}
+.doc-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* FORM */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;max-width:600px;box-shadow:var(--shadow-md);}
+.form-row{margin-bottom:18px;}
+.form-label2{font-size:12px;color:var(--text2);margin-bottom:7px;display:block;font-weight:500;letter-spacing:0.01em;}
+.form-input2{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color 0.2s;}
+.form-input2:focus{border-color:var(--accent);background:var(--surface);}
+.form-input2::placeholder{color:var(--text4);}
+.form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-submit{width:100%;padding:13px;border-radius:var(--radius-sm);background:var(--accent);color:white;border:none;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;margin-top:8px;transition:background 0.2s;letter-spacing:0.01em;}
+.form-submit:hover{background:var(--accent2);}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:white;font-size:12px;padding:12px 20px;border-radius:var(--radius-sm);opacity:0;transform:translateY(8px);transition:all 0.25s;pointer-events:none;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-md);}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast i{color:var(--accent2);font-size:15px;}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing">
+<nav>
+  <div class="nav-logo">Rent<span>Set</span></div>
+  <div class="nav-links"><a href="#features">Features</a><a href="#how">How it works</a><a href="#providers">Providers</a></div>
+  <span style="font-size:13px;color:var(--text2);cursor:pointer;margin-right:4px;" onclick="showAuth('login')">Sign in</span><button class="nav-cta" onclick="showAuth('signup')">Get started free</button>
+</nav>
+<section class="hero">
+  <div>
+    <div class="hero-eyebrow"><div class="hero-eyebrow-dot"></div>Built for property owners & managers</div>
+    <h1>Your rental unit,<br><em>ready faster.</em></h1>
+    <p class="hero-sub">Register your property, set the move-out date, and RentSet walks you through the exact process used by Erie's best landlords — legally compliant and done in 7 days or less.</p>
+    <div class="hero-actions">
+      <button class="btn-primary-l" onclick="showAuth('signup')">Start managing free →</button>
+      <button class="btn-ghost-l" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See how it works</button>
+    </div>
+    <div class="hero-stats">
+      <div><div class="stat-v">5–7</div><div class="stat-l">Days to turnover</div></div>
+      <div><div class="stat-v">$0</div><div class="stat-l">Missed deposit deadlines</div></div>
+      <div><div class="stat-v">100%</div><div class="stat-l">PA law compliant</div></div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-photo-main"><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=900&q=80" alt="Luxury apartment" /></div>
+    <div class="hero-photo-card">
+      <div class="hpc-label">Active turnovers</div>
+      <div class="hpc-prop"><div class="hpc-name">412 Peach St — 2B</div><span style="font-size:10px;padding:2px 6px;border-radius:8px;background:#FDF8EE;color:#A07020;border:1px solid #E8D4A8;">In progress</span></div>
+      <div class="hpc-bar"><div class="hpc-fill" style="width:55%;background:#A07020;"></div></div>
+      <div class="hpc-prop" style="margin-top:8px;"><div class="hpc-name">809 Holland St — 1</div><span style="font-size:10px;padding:2px 6px;border-radius:8px;background:#FDF2F1;color:#C0392B;border:1px solid #F0C5C0;">Action needed</span></div>
+      <div class="hpc-bar"><div class="hpc-fill" style="width:10%;background:#C0392B;"></div></div>
+    </div>
+    <div class="hero-photo-badge"><div class="hpb-num">7</div><div class="hpb-label">Days or less</div></div>
+  </div>
+</section>
+<section class="section section-alt" id="features">
+  <div class="section-hdr center"><div class="eyebrow">Features</div><h2>Everything you need to<br><em>turn over faster</em></h2><p class="section-sub">Built around the exact process used by Erie's best landlords. Modeled after real interviews with top operators.</p></div>
+  <div class="features-grid">
+    <div class="feature"><div class="feat-icon">📋</div><div class="feat-title">Smart turnover timeline</div><div class="feat-desc">Enter your move-out date and RentSet auto-generates a step-by-step timeline with deadlines, legal checkpoints, and task dependencies built in.</div></div>
+    <div class="feature"><div class="feat-icon">⚖️</div><div class="feat-title">PA law built in</div><div class="feat-desc">Every legal deadline — 30-day notices, security deposit returns, inspection requirements — tracked automatically so you never violate tenant rights.</div></div>
+    <div class="feature"><div class="feat-icon">🔧</div><div class="feat-title">Provider marketplace</div><div class="feat-desc">Browse and hire verified local cleaners, contractors, inspectors, and photographers directly. No more random calls.</div></div>
+    <div class="feature"><div class="feat-icon">🏠</div><div class="feat-title">One-click listing sync</div><div class="feat-desc">List your unit across Zillow, Apartments.com, and Facebook Marketplace from one place.</div></div>
+    <div class="feature"><div class="feat-icon">🔔</div><div class="feat-title">Smart notifications</div><div class="feat-desc">Get alerted before deadlines hit, not after. RentSet tells you exactly what needs to happen next.</div></div>
+    <div class="feature"><div class="feat-icon">📁</div><div class="feat-title">Document vault</div><div class="feat-desc">Store every notice, inspection report, quote, and receipt in one place. Your paper trail is always ready.</div></div>
+  </div>
+</section>
+<section class="section" id="how">
+  <div class="section-hdr center"><div class="eyebrow">How it works</div><h2>From move-out to<br><em>move-in ready</em></h2></div>
+  <div class="steps-grid">
+    <div class="step-item"><div class="step-num">1</div><div class="step-title">Register & prep early</div><div class="step-desc">Add your unit, enter move-out date, and RentSet sends the tenant a cleaning list and pre-books your vendors automatically.</div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-title">Move-out day — go immediately</div><div class="step-desc">The moment the tenant leaves, your checklist activates: change locks, start inspection, vendors begin same day. No waiting.</div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-title">Run work in parallel</div><div class="step-desc">Cleaning and repairs run at the same time — not one after the other. Pre-booked vendors start Day 1, unit is ready by Day 4.</div></div>
+    <div class="step-item"><div class="step-num">4</div><div class="step-title">List & fill by Day 7</div><div class="step-desc">List across Zillow, Apartments.com, Facebook, and TurboTenant in one click. Interview applicants and sign the lease — all within 7 days.</div></div>
+  </div>
+</section>
+<section class="section section-alt">
+  <div class="section-hdr"><div class="eyebrow">Built for real landlords</div><h2>From <em>single units</em><br>to full portfolios</h2></div>
+  <div class="photo-grid">
+    <div class="photo-main-l"><img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=900&q=80" alt="Apartment" /><div class="photo-overlay-l"><div class="photo-overlay-title">Manage every unit in one dashboard</div><div class="photo-overlay-sub">See the status of every property at a glance</div></div></div>
+    <div class="photo-stack-l">
+      <div class="photo-sm"><img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80" alt="Interior" /><div class="photo-sm-overlay"><div style="font-size:13px;font-weight:500;color:white;">Track every turnover step</div></div></div>
+      <div class="photo-sm"><img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80" alt="Keys" /><div class="photo-sm-overlay"><div style="font-size:13px;font-weight:500;color:white;">Get keys ready faster</div></div></div>
+    </div>
+  </div>
+</section>
+<section class="section" id="providers">
+  <div class="section-hdr center"><div class="eyebrow">Marketplace</div><h2>Trusted providers,<br><em>ready to work</em></h2><p class="section-sub">Every professional is rated and reviewed by other landlords in your area.</p></div>
+  <div class="providers-grid">
+    <div class="prov-card-l"><div class="prov-av-l" style="background:var(--accent-light);color:var(--accent);">SC</div><div class="prov-name-l">Sara's Clean Co.</div><div class="prov-type-l">Deep cleaning · Erie, PA</div><div class="stars-l">★★★★★</div><div class="prov-rate-l">4.9 · 47 jobs · $120–180/unit · 1-day turnaround</div></div>
+    <div class="prov-card-l"><div class="prov-av-l" style="background:var(--gold-light);color:var(--gold);">MR</div><div class="prov-name-l">Mike's Repairs</div><div class="prov-type-l">Contractor · Erie, PA</div><div class="stars-l">★★★★★</div><div class="prov-rate-l">4.8 · 89 jobs · Paint, plumbing, carpentry</div></div>
+    <div class="prov-card-l"><div class="prov-av-l" style="background:#F3F0FA;color:#6B5DB0;">JI</div><div class="prov-name-l">Johnson Inspections</div><div class="prov-type-l">Inspector · Erie, PA</div><div class="stars-l">★★★★★</div><div class="prov-rate-l">5.0 · 62 jobs · $75/unit · Same-day reports</div></div>
+  </div>
+</section>
+<section class="cta-section">
+  <div class="cta-bg-img"></div>
+  <div class="cta-content">
+    <div class="cta-eyebrow">Get started</div>
+    <div class="cta-h2">Stop guessing.<br><em>Start turning over.</em></div>
+    <p class="cta-sub">The best Erie landlords turn units in 5–7 days. Now every landlord can too.</p>
+    <div class="cta-actions">
+      <button class="btn-cta" onclick="showAuth('signup')">Create your free account →</button>
+      <button class="btn-cta-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See a demo</button>
+    </div>
+  </div>
+</section>
+<footer><div class="footer-logo">Rent<span>Set</span></div><div class="footer-copy">© 2026 RentSet. Built for property owners.</div></footer>
+</div>
+
+<!-- AUTH -->
+<div id="auth-section">
+  <div class="auth-screen">
+    <div class="auth-left"><img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=900&q=80" alt="Property" /><div class="auth-left-overlay"><div class="auth-left-logo">Rent<span>Set</span></div><div class="auth-left-quote">"The fastest way from move-out to move-in ready."</div></div></div>
+    <div class="auth-right">
+      <div class="auth-form-wrap">
+        <div class="auth-form-logo">Rent<span>Set</span></div>
+        <div id="view-login" class="auth-view active">
+          <div class="auth-title">Welcome back</div>
+          <div class="auth-sub">Sign in to your property dashboard</div>
+          <div class="form-group"><label class="form-label">Email address</label><input class="form-input" type="email" placeholder="you@example.com" id="login-email" /></div>
+          <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" placeholder="••••••••" /></div>
+          <button class="auth-btn" onclick="doLogin()">Sign in →</button>
+          <div class="auth-switch">No account? <a onclick="toggleAuth('signup')">Create one free</a> · <a onclick="backToLanding()">← Home</a></div>
+        </div>
+        <div id="view-signup" class="auth-view">
+          <div class="auth-title">Create account</div>
+          <div class="auth-sub">Start managing your properties for free</div>
+          <div class="form-group"><label class="form-label">Full name</label><input class="form-input" type="text" placeholder="Your name" id="signup-name" /></div>
+          <div class="form-group"><label class="form-label">Email address</label><input class="form-input" type="email" placeholder="you@example.com" /></div>
+          <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" placeholder="Create a password" /></div>
+          <button class="auth-btn" onclick="doSignup()">Create account →</button>
+          <div class="auth-switch">Have an account? <a onclick="toggleAuth('login')">Sign in</a> · <a onclick="backToLanding()">← Home</a></div>
+        </div>
+        <div id="view-onboard" class="auth-view">
+          <div class="onboard-progress"><div class="op-dot active" id="od1"></div><div class="op-dot" id="od2"></div><div class="op-dot" id="od3"></div></div>
+          <div class="onboard-step active" id="ob1">
+            <div class="onboard-icon"><i class="ti ti-building" style="font-size:22px;color:var(--accent);"></i></div>
+            <div class="auth-title" style="font-size:26px;">Add first property</div>
+            <div class="auth-sub">Tell us about the unit you want to manage</div>
+            <div class="form-group"><label class="form-label">Property address</label><input class="form-input" type="text" placeholder="412 Peach St, Unit 2B, Erie PA" /></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="form-group"><label class="form-label">Bedrooms</label><select class="form-input"><option>1 bed</option><option selected>2 bed</option><option>3 bed</option><option>4+</option></select></div>
+              <div class="form-group"><label class="form-label">Bathrooms</label><select class="form-input"><option selected>1 bath</option><option>1.5 bath</option><option>2 bath</option></select></div>
+            </div>
+            <button class="auth-btn" onclick="nextOnboard(2)">Continue →</button>
+          </div>
+          <div class="onboard-step" id="ob2">
+            <div class="onboard-icon"><i class="ti ti-calendar" style="font-size:22px;color:var(--accent);"></i></div>
+            <div class="auth-title" style="font-size:26px;">Move-out details</div>
+            <div class="auth-sub">We'll build your full timeline automatically</div>
+            <div class="form-group"><label class="form-label">Move-out date</label><input class="form-input" type="date" /></div>
+            <div class="form-group"><label class="form-label">Target rent ($/mo)</label><input class="form-input" type="number" placeholder="895" /></div>
+            <div class="prop-type-grid">
+              <div class="prop-type-btn sel" onclick="selType(this)"><i class="ti ti-building"></i><div class="prop-type-label">Apartment</div></div>
+              <div class="prop-type-btn" onclick="selType(this)"><i class="ti ti-home"></i><div class="prop-type-label">Single family</div></div>
+              <div class="prop-type-btn" onclick="selType(this)"><i class="ti ti-building-skyscraper"></i><div class="prop-type-label">Multi-unit</div></div>
+              <div class="prop-type-btn" onclick="selType(this)"><i class="ti ti-door"></i><div class="prop-type-label">Condo</div></div>
+            </div>
+            <button class="auth-btn" onclick="nextOnboard(3)">Continue →</button>
+          </div>
+          <div class="onboard-step" id="ob3">
+            <div class="onboard-icon"><i class="ti ti-check" style="font-size:22px;color:var(--accent);"></i></div>
+            <div class="auth-title" style="font-size:26px;">You're all set</div>
+            <div class="auth-sub">Your turnover timeline has been generated based on best practices from Erie's top landlords.</div>
+            <div style="background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:20px;border:1px solid var(--border);">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">Your timeline at a glance</div>
+              <div style="display:flex;flex-direction:column;gap:7px;">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><div style="width:18px;height:18px;border-radius:50%;background:var(--accent-light);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--accent);">1</div>Send 30-day move-out notice</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><div style="width:18px;height:18px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);">2</div>Initial inspection</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><div style="width:18px;height:18px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);">3</div>Deep cleaning + repairs</div>
+                <div style="font-size:11px;color:var(--text3);padding-left:26px;">+ 26 more steps auto-generated</div>
+              </div>
+            </div>
+            <button class="auth-btn" onclick="enterApp()">Open my dashboard →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-section">
+  <div class="app-layout">
+    <div class="sidebar">
+      <div class="sidebar-logo"><div class="logo-text">Rent<span>Set</span></div><div class="logo-sub">Property OS</div></div>
+      <nav class="app-nav">
+        <div class="nav-section-lbl">Overview</div>
+        <div class="nav-item active" onclick="navTo('dashboard',this)"><i class="ti ti-layout-dashboard"></i>Dashboard<span class="nav-badge">3</span></div>
+        <div class="nav-item" onclick="navTo('properties',this)"><i class="ti ti-building"></i>Properties</div>
+        <div class="nav-section-lbl">Manage</div>
+        <div class="nav-item" onclick="navTo('providers',this)"><i class="ti ti-tool"></i>Providers</div>
+        <div class="nav-item" onclick="navTo('listings',this)"><i class="ti ti-home-search"></i>Listings<span class="nav-badge-warn">2</span></div>
+        <div class="nav-item" onclick="navTo('documents',this)"><i class="ti ti-file-text"></i>Documents</div>
+        <div class="nav-section-lbl">Tools</div>
+        <div class="nav-item" onclick="navTo('process',this)"><i class="ti ti-list-check"></i>7-Day process</div>
+        <div class="nav-item" onclick="navTo('insights',this)"><i class="ti ti-chart-bar"></i>Insights</div>
+        <div class="nav-section-lbl">Account</div>
+        <div class="nav-item" onclick="navTo('pricing',this)"><i class="ti ti-crown"></i>Plans & pricing</div>
+        <div class="nav-section-lbl">Add</div>
+        <div class="nav-item" onclick="navTo('addprop',this)"><i class="ti ti-plus"></i>Add property</div>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="back-home-link" onclick="backToLanding()"><i class="ti ti-arrow-left" style="font-size:13px;"></i>Back to home</div>
+        <div class="user-row"><div class="user-avatar" id="user-avatar">AS</div><div><div class="user-name" id="user-name-display">Ahmad Shehadeh</div><div class="user-plan">Free plan · 3 properties</div></div></div>
+      </div>
+    </div>
+
+    <div class="app-main">
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard" class="app-page active">
+        <div class="page-header">
+          <div><div class="page-title">Good morning, Ahmad</div><div class="page-sub">Wednesday, May 6, 2026 — 3 tasks need your attention today</div></div>
+          <button class="btn-app" onclick="navTo('addprop',document.querySelectorAll('.nav-item')[5])"><i class="ti ti-plus"></i>Add property</button>
+        </div>
+        <div class="page-body">
+          <div class="metrics-row">
+            <div class="met-card warn"><div class="met-l">Active turnovers</div><div class="met-v">2</div><div class="met-trend">↑ 1 from last month</div></div>
+            <div class="met-card"><div class="met-l">Avg turnover days</div><div class="met-v good">14</div><div class="met-trend">↓ 2 days improved</div></div>
+            <div class="met-card danger"><div class="met-l">Vacancy exposure</div><div class="met-v danger">$597</div><div class="met-trend">Combined rent at risk</div></div>
+            <div class="met-card danger"><div class="met-l">Risk level</div><div class="met-v danger">High</div><div class="met-trend">1 blocked · 1 unstarted</div></div>
+          </div>
+          <div class="alerts">
+            <div class="alert alert-danger"><i class="ti ti-alert-circle" style="font-size:18px;color:var(--danger);flex-shrink:0;"></i><div class="alert-text"><strong>Deep cleaning overdue</strong> on 412 Peach St — blocking repairs from starting. Security deposit deadline in 3 days.</div><button class="alert-btn" onclick="navTo('providers',document.querySelectorAll('.nav-item')[2])">Find cleaner →</button></div>
+            <div class="alert alert-warn"><i class="ti ti-bell" style="font-size:18px;color:var(--warn);flex-shrink:0;"></i><div class="alert-text"><strong>Move-out notice not sent</strong> for 809 Holland St — tenant leaves May 31. Send today to stay legally compliant.</div><button class="alert-btn-warn" onclick="showToast('Opening document generator...')">Send notice →</button></div>
+          </div>
+          <div class="dash-grid">
+            <div>
+              <div class="sec-lbl">Your properties</div>
+              <div class="prop-card sel" onclick="selProp(1,this)">
+                <div class="ph"><div><div class="pn">412 Peach St — 2B</div><div class="pa">Erie, PA 16501</div></div><span class="pill p-warn">In progress</span></div>
+                <div class="pi">Moved out Apr 28 · Target move-in May 16</div>
+                <div class="pgb"><div class="pgf" style="width:55%;background:var(--warn);"></div></div>
+              </div>
+              <div class="prop-card" onclick="selProp(2,this)">
+                <div class="ph"><div><div class="pn">809 Holland St — 1</div><div class="pa">Erie, PA 16505</div></div><span class="pill p-danger">Action needed</span></div>
+                <div class="pi">Tenant leaving May 31 · Notice required</div>
+                <div class="pgb"><div class="pgf" style="width:10%;background:var(--danger);"></div></div>
+              </div>
+              <div class="prop-card" onclick="selProp(3,this)">
+                <div class="ph"><div><div class="pn">220 W 8th St — 4</div><div class="pa">Erie, PA 16501</div></div><span class="pill p-good">Occupied</span></div>
+                <div class="pi">Lease ends Aug 31 · No action yet</div>
+                <div class="pgb"><div class="pgf" style="width:0%;background:var(--accent);"></div></div>
+              </div>
+              <div class="prop-card dashed" onclick="navTo('addprop',document.querySelectorAll('.nav-item')[5])" style="text-align:center;padding:14px;">
+                <span style="font-size:12px;color:var(--text3);">+ Add property</span>
+              </div>
+            </div>
+            <div>
+              <div class="sec-lbl">Turnover timeline</div>
+              <div id="tl-p1" class="tl-panel">
+                <div class="tl-panel-hdr"><div><div class="tl-panel-title">412 Peach St — Unit 2B</div><div class="tl-panel-sub">Day 3 of 7 · 4 of 12 steps complete</div></div><span class="tl-target" style="background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border);">Target: 7 days</span></div>
+                <div class="tlm"><div class="tm"><div class="tml">Days left</div><div class="tmv warn">4</div></div><div class="tm"><div class="tml">Done</div><div class="tmv good">4/12</div></div><div class="tm"><div class="tml">Blocked</div><div class="tmv danger">1</div></div><div class="tm"><div class="tml">Cost</div><div class="tmv">$840</div></div></div>
+                <div class="ph-lbl">Phase 1 — Pre-vacancy (Day -30)</div>
+                <div class="tli"><div class="tll"><div class="tlc cd">✓</div><div class="tl-ln d"></div></div><div class="tlcard"><div class="tlr"><span class="tln d">Send 30-day notice & ask why leaving</span><span class="tld">Mar 28</span></div><div class="tldet"><span class="tag tag-law">PA §250.501</span><span class="tag tag-done">done</span></div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cd">✓</div><div class="tl-ln d"></div></div><div class="tlcard"><div class="tlr"><span class="tln d">Send cleaning requirement list to tenant</span><span class="tld">Mar 28</span></div><div class="tldet">Sets expectations upfront <span class="tag tag-done">done</span></div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cd">✓</div><div class="tl-ln d"></div></div><div class="tlcard"><div class="tlr"><span class="tln d">Pre-book vendors while unit is occupied</span><span class="tld">Apr 1</span></div><div class="tldet">Cleaner + contractor on standby <span class="tag tag-done">done</span></div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cd">✓</div><div class="tl-ln d"></div></div><div class="tlcard"><div class="tlr"><span class="tln d">Confirm exact move-out date & time</span><span class="tld">Apr 27</span></div><div class="tldet">Stay in close contact with tenant <span class="tag tag-done">done</span></div></div></div>
+                <div class="ph-lbl">Phase 2 — Day 0 (Move-out day)</div>
+                <div class="tli"><div class="tll"><div class="tlc cb">!</div><div class="tl-ln"></div></div><div class="tlcard blk"><div class="tlr"><span class="tln b">Change locks & install lockbox immediately</span><span class="tld" style="color:var(--danger);">Today</span></div><div class="tldet"><span class="tag tag-blocked">action needed</span> Do this same hour tenant leaves</div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cp">6</div><div class="tl-ln"></div></div><div class="tlcard"><div class="tlr"><span class="tln p">Walk-through inspection & damage log</span><span class="tld">Day 0</span></div><div class="tldet">Document everything with photos <span class="tag tag-law">PA law</span></div></div></div>
+                <div class="ph-lbl">Phase 3 — Days 1–3 (Turnover work)</div>
+                <div class="tli"><div class="tll"><div class="tlc cp">7</div><div class="tl-ln"></div></div><div class="tlcard"><div class="tlr"><span class="tln p">Deep cleaning (zone by zone)</span><span class="tld">Day 1</span></div><div class="tldet">Pre-booked cleaner starts Day 1 <span class="tag tag-pro">cleaner</span></div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cp">8</div><div class="tl-ln"></div></div><div class="tlcard"><div class="tlr"><span class="tln p">Repairs — runs parallel with cleaning</span><span class="tld">Day 1–3</span></div><div class="tldet">Paint, plumbing, carpet <span class="tag tag-pro">contractor</span></div></div></div>
+                <div class="ph-lbl">Phase 4 — Days 4–5 (List & fill)</div>
+                <div class="tli"><div class="tll"><div class="tlc cp">9</div><div class="tl-ln"></div></div><div class="tlcard"><div class="tlr"><span class="tln p">Final inspection & sign-off</span><span class="tld">Day 4</span></div><div class="tldet"><span class="tag tag-law">PA law required</span></div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cp">10</div><div class="tl-ln"></div></div><div class="tlcard"><div class="tlr"><span class="tln p">List on Zillow, Apartments.com, Facebook, TurboTenant</span><span class="tld">Day 4</span></div><div class="tldet">All platforms in one click</div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cp">11</div><div class="tl-ln"></div></div><div class="tlcard"><div class="tlr"><span class="tln p">Interview applicants in person & fill application yourself</span><span class="tld">Day 5–6</span></div><div class="tldet">Joel's method — don't let them self-fill</div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cp">12</div></div><div class="tlcard"><div class="tlr"><span class="tln p">Deposit discussion (by phone) + lease signed</span><span class="tld">Day 7</span></div><div class="tldet"><span class="tag tag-law">PA §250.512</span><span class="tag tag-due">30-day return deadline</span></div></div></div>
+              </div>
+              <div id="tl-p2" class="tl-panel" style="display:none;">
+                <div class="tl-panel-hdr"><div><div class="tl-panel-title">809 Holland St — Unit 1</div><div class="tl-panel-sub">Not started · Tenant leaving May 31</div></div><span class="tl-target" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);">Action needed</span></div>
+                <div class="tlm"><div class="tm"><div class="tml">Days to move-out</div><div class="tmv warn">26</div></div><div class="tm"><div class="tml">Done</div><div class="tmv">0/10</div></div><div class="tm"><div class="tml">Notice sent</div><div class="tmv danger">No</div></div><div class="tm"><div class="tml">Cost so far</div><div class="tmv">$0</div></div></div>
+                <div class="ph-lbl">Phase 1 — Urgent</div>
+                <div class="tli"><div class="tll"><div class="tlc cb">!</div><div class="tl-ln"></div></div><div class="tlcard blk"><div class="tlr"><span class="tln b">Send move-out notice NOW</span><span class="tld" style="color:var(--danger);">Urgent</span></div><div class="tldet"><span class="tag tag-blocked">overdue</span><span class="tag tag-law">PA §250.501</span></div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cp">2</div><div class="tl-ln"></div></div><div class="tlcard"><div class="tlr"><span class="tln p">Initial inspection</span><span class="tld">Est. Jun 1</span></div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cp">3</div></div><div class="tlcard"><div class="tlr"><span class="tln p">Cleaning + repairs + listing</span><span class="tld">Est. Jun 4–12</span></div></div></div>
+              </div>
+              <div id="tl-p3" class="tl-panel" style="display:none;">
+                <div class="tl-panel-hdr"><div><div class="tl-panel-title">220 W 8th St — Unit 4</div><div class="tl-panel-sub">Occupied · Lease ends Aug 31</div></div><span class="tl-target" style="background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-border);">On track</span></div>
+                <div class="tlm"><div class="tm"><div class="tml">Days to lease end</div><div class="tmv">118</div></div><div class="tm"><div class="tml">Renew decision</div><div class="tmv warn">Jun 1</div></div><div class="tm"><div class="tml">Notice deadline</div><div class="tmv">Jul 1</div></div><div class="tm"><div class="tml">Status</div><div class="tmv good">OK</div></div></div>
+                <div class="ph-lbl">Upcoming</div>
+                <div class="tli"><div class="tll"><div class="tlc ca">!</div><div class="tl-ln"></div></div><div class="tlcard"><div class="tlr"><span class="tln">Decide — renew or turn over</span><span class="tld" style="color:var(--warn);">By Jun 1</span></div><div class="tldet">Contact tenant for intent <span class="tag tag-due">27 days</span></div></div></div>
+                <div class="tli"><div class="tll"><div class="tlc cp">2</div></div><div class="tlcard"><div class="tlr"><span class="tln p">Send notice if not renewing</span><span class="tld">By Jul 1</span></div><div class="tldet"><span class="tag tag-law">PA §250.501</span></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROPERTIES -->
+      <div id="page-properties" class="app-page">
+        <div class="page-header"><div><div class="page-title">Properties</div><div class="page-sub">All units in your portfolio</div></div><button class="btn-app" onclick="navTo('addprop',document.querySelectorAll('.nav-item')[5])"><i class="ti ti-plus"></i>Add property</button></div>
+        <div class="page-body">
+          <div class="metrics-row">
+            <div class="met-card"><div class="met-l">Total properties</div><div class="met-v">3</div></div>
+            <div class="met-card good"><div class="met-l">Occupied</div><div class="met-v good">1</div></div>
+            <div class="met-card warn"><div class="met-l">In turnover</div><div class="met-v warn">2</div></div>
+            <div class="met-card"><div class="met-l">Monthly revenue</div><div class="met-v" style="font-size:24px;">$855</div></div>
+          </div>
+          <div class="prop-card sel"><div class="ph"><div><div class="pn">412 Peach St — Unit 2B</div><div class="pa">Erie, PA 16501 · 2 bed · 1 bath</div></div><span class="pill p-warn">In progress</span></div><div class="pi">Tenant: John D. · Moved out Apr 28 · $895/mo · Target move-in May 16</div><div class="pgb"><div class="pgf" style="width:55%;background:var(--warn);"></div></div></div>
+          <div class="prop-card"><div class="ph"><div><div class="pn">809 Holland St — Unit 1</div><div class="pa">Erie, PA 16505 · 2 bed · 1 bath</div></div><span class="pill p-danger">Action needed</span></div><div class="pi">Tenant: Maria S. · Leaving May 31 · $825/mo · Notice not yet sent</div><div class="pgb"><div class="pgf" style="width:10%;background:var(--danger);"></div></div></div>
+          <div class="prop-card"><div class="ph"><div><div class="pn">220 W 8th St — Unit 4</div><div class="pa">Erie, PA 16501 · 1 bed · 1 bath</div></div><span class="pill p-good">Occupied</span></div><div class="pi">Tenant: Kevin R. · Lease ends Aug 31 · $855/mo · Renewal decision by Jun 1</div><div class="pgb"><div class="pgf" style="width:0%;background:var(--accent);"></div></div></div>
+        </div>
+      </div>
+
+      <!-- PROVIDERS -->
+      <div id="page-providers" class="app-page">
+        <div class="page-header"><div><div class="page-title">Service providers</div><div class="page-sub">Verified local professionals</div></div><button class="btn-app" onclick="showToast('Provider registration coming soon!')"><i class="ti ti-plus"></i>Add provider</button></div>
+        <div class="page-body">
+          <div class="filter-row"><button class="filter-btn active" onclick="filterProv('all',this)">All</button><button class="filter-btn" onclick="filterProv('cleaner',this)">Cleaners</button><button class="filter-btn" onclick="filterProv('contractor',this)">Contractors</button><button class="filter-btn" onclick="filterProv('inspector',this)">Inspectors</button><button class="filter-btn" onclick="filterProv('photographer',this)">Photographers</button></div>
+          <div class="prov-grid">
+            <div class="prov-card" data-type="cleaner"><div class="prov-top"><div class="prov-avatar" style="background:var(--accent-light);color:var(--accent);">SC</div><div style="flex:1;"><div class="prov-name">Sara's Clean Co.</div><div class="prov-type">Cleaner · Erie, PA</div></div><span class="pill p-good">Available</span></div><div class="stars">★★★★★</div><div style="font-size:10px;color:var(--text3);margin-bottom:10px;">4.9 · 47 jobs completed</div><div class="prov-info">1-day turnaround · $120–180/unit<br>Move-out deep clean specialist</div><button class="btn-app" style="width:100%;margin-top:14px;justify-content:center;" onclick="showToast('Booking Sara\'s Clean Co. for 412 Peach St')">Book for 412 Peach</button></div>
+            <div class="prov-card" data-type="cleaner"><div class="prov-top"><div class="prov-avatar" style="background:#EEF4FB;color:#2E6DA4;">EP</div><div style="flex:1;"><div class="prov-name">Erie Pro Clean</div><div class="prov-type">Cleaner · Erie, PA</div></div><span class="pill p-good">Available</span></div><div class="stars">★★★★☆</div><div style="font-size:10px;color:var(--text3);margin-bottom:10px;">4.6 · 31 jobs completed</div><div class="prov-info">2-day turnaround · $90–150/unit<br>Carpet steam cleaning included</div><button class="btn-outline" style="width:100%;margin-top:14px;" onclick="showToast('Opening Erie Pro Clean profile')">View profile</button></div>
+            <div class="prov-card" data-type="contractor"><div class="prov-top"><div class="prov-avatar" style="background:var(--gold-light);color:var(--gold);">MR</div><div style="flex:1;"><div class="prov-name">Mike's Repairs</div><div class="prov-type">Contractor · Erie, PA</div></div><span class="pill p-warn">Hired</span></div><div class="stars">★★★★★</div><div style="font-size:10px;color:var(--text3);margin-bottom:10px;">4.8 · 89 jobs completed</div><div class="prov-info">Paint, plumbing, carpentry<br>On 412 Peach St · $840 approved</div><button class="btn-outline" style="width:100%;margin-top:14px;" onclick="showToast('Opening job status')">View job status</button></div>
+            <div class="prov-card" data-type="inspector"><div class="prov-top"><div class="prov-avatar" style="background:#F3F0FA;color:#6B5DB0;">JI</div><div style="flex:1;"><div class="prov-name">Johnson Inspections</div><div class="prov-type">Inspector · Erie, PA</div></div><span class="pill p-good">Available</span></div><div class="stars">★★★★★</div><div style="font-size:10px;color:var(--text3);margin-bottom:10px;">5.0 · 62 jobs completed</div><div class="prov-info">Move-in/out inspections · $75/unit<br>Same-day reports with photos</div><button class="btn-outline" style="width:100%;margin-top:14px;" onclick="showToast('Scheduling Johnson Inspections')">Schedule</button></div>
+            <div class="prov-card" data-type="photographer"><div class="prov-top"><div class="prov-avatar" style="background:#FCF0F4;color:#C0527A;">LP</div><div style="flex:1;"><div class="prov-name">Lens & Property</div><div class="prov-type">Photographer · Erie, PA</div></div><span class="pill p-good">Available</span></div><div class="stars">★★★★☆</div><div style="font-size:10px;color:var(--text3);margin-bottom:10px;">4.7 · 28 jobs completed</div><div class="prov-info">Photos + virtual tour · $150/unit<br>MLS-ready in 24 hrs</div><button class="btn-outline" style="width:100%;margin-top:14px;" onclick="showToast('Scheduling Lens & Property')">Schedule shoot</button></div>
+            <div class="prov-card" data-type="contractor"><div class="prov-top"><div class="prov-avatar" style="background:#F0F7E8;color:#4A7A20;">EH</div><div style="flex:1;"><div class="prov-name">Erie Handyman Co.</div><div class="prov-type">Contractor · Erie, PA</div></div><span class="pill p-good">Available</span></div><div class="stars">★★★★☆</div><div style="font-size:10px;color:var(--text3);margin-bottom:10px;">4.5 · 54 jobs completed</div><div class="prov-info">General repairs · $65/hr<br>Available this week</div><button class="btn-outline" style="width:100%;margin-top:14px;" onclick="showToast('Requesting quote from Erie Handyman')">Get quote</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTINGS -->
+      <div id="page-listings" class="app-page">
+        <div class="page-header"><div><div class="page-title">Listings</div><div class="page-sub">Manage and track your active listings</div></div><button class="btn-app" onclick="showToast('New listing wizard opening...')"><i class="ti ti-plus"></i>New listing</button></div>
+        <div class="page-body">
+          <div class="list-card">
+            <div class="list-card-hdr"><div><div class="list-name">412 Peach St — Unit 2B</div><div style="font-size:12px;color:var(--text3);margin-top:4px;">2 bed · 1 bath · Erie, PA 16501 · Available May 16</div></div><div class="list-price">$895<span style="font-size:14px;font-family:'DM Sans';color:var(--text2);">/mo</span></div></div>
+            <div class="list-detail">Newly renovated unit with updated kitchen, in-unit laundry, and off-street parking. Close to Gannon University and downtown Erie.</div>
+            <div class="platform-row"><span class="plat live">Zillow — live</span><span class="plat live">Apartments.com — live</span><span class="plat live">Facebook Marketplace — live</span><span class="plat">Craigslist — not posted</span></div>
+            <div class="list-stats"><div class="ls"><div class="ls-v">247</div><div class="ls-l">Total views</div></div><div class="ls"><div class="ls-v" style="color:var(--accent);">2</div><div class="ls-l">Applications</div></div><div class="ls"><div class="ls-v">5</div><div class="ls-l">Days listed</div></div></div>
+            <div style="margin-top:16px;display:flex;gap:8px;"><button class="btn-app" onclick="showToast('Opening 2 applications for review...')">Review 2 applications</button><button class="btn-outline" onclick="showToast('Opening listing editor...')">Edit listing</button><button class="btn-outline" onclick="showToast('Posting to Craigslist...')">Post to Craigslist</button></div>
+          </div>
+          <div class="list-card" style="opacity:0.6;">
+            <div class="list-card-hdr"><div><div class="list-name">809 Holland St — Unit 1</div><div style="font-size:12px;color:var(--text3);margin-top:4px;">2 bed · 1 bath · Erie, PA 16505 · Available ~Jun 15</div></div><div class="list-price" style="color:var(--text3);">$825<span style="font-size:14px;font-family:'DM Sans';">/mo</span></div></div>
+            <div class="list-detail">Listing not yet published — turnover not complete. Prepare your draft now to list the moment the unit is ready.</div>
+            <div class="platform-row"><span class="plat">Zillow — pending</span><span class="plat">Apartments.com — pending</span></div>
+            <button class="btn-outline" style="margin-top:8px;" onclick="showToast('Opening listing draft editor...')">Prepare draft now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOCUMENTS -->
+      <div id="page-documents" class="app-page">
+        <div class="page-header"><div><div class="page-title">Documents</div><div class="page-sub">Legal docs, reports, and receipts</div></div><button class="btn-app" onclick="showToast('Upload dialog opening...')"><i class="ti ti-upload"></i>Upload</button></div>
+        <div class="page-body">
+          <div class="filter-row"><button class="filter-btn active">All</button><button class="filter-btn">Notices</button><button class="filter-btn">Inspections</button><button class="filter-btn">Leases</button><button class="filter-btn">Receipts</button></div>
+          <div class="doc-list">
+            <div class="doc-row"><div class="doc-icon"><i class="ti ti-file-text"></i></div><div style="flex:1;"><div class="doc-name">Move-out notice — 412 Peach St</div><div class="doc-meta">Served Mar 28 · 68 P.S. §250.501</div></div><span class="tag tag-done">Served</span></div>
+            <div class="doc-row"><div class="doc-icon"><i class="ti ti-clipboard-check"></i></div><div style="flex:1;"><div class="doc-name">Initial inspection report — 412 Peach St</div><div class="doc-meta">Apr 29 · 3 items flagged · Photos attached</div></div><span class="tag tag-done">Complete</span></div>
+            <div class="doc-row"><div class="doc-icon"><i class="ti ti-receipt"></i></div><div style="flex:1;"><div class="doc-name">Repair quote — Mike's Repairs</div><div class="doc-meta">May 1 · $840 approved · 412 Peach St</div></div><span class="tag tag-done">Approved</span></div>
+            <div class="doc-row"><div class="doc-icon"><i class="ti ti-clipboard-check"></i></div><div style="flex:1;"><div class="doc-name">Final inspection report — 412 Peach St</div><div class="doc-meta">Scheduled May 11 · Not yet completed</div></div><span class="tag tag-due">Pending</span></div>
+            <div class="doc-row"><div class="doc-icon"><i class="ti ti-cash"></i></div><div style="flex:1;"><div class="doc-name">Security deposit itemization — 412 Peach St</div><div class="doc-meta">Due May 28 · 68 P.S. §250.512 · 30-day deadline</div></div><span class="tag tag-blocked">Not started</span></div>
+            <div class="doc-row"><div class="doc-icon"><i class="ti ti-file-text"></i></div><div style="flex:1;"><div class="doc-name">Move-out notice — 809 Holland St</div><div class="doc-meta">Not yet sent · Must be served immediately</div></div><span class="tag tag-blocked">Urgent</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADD PROPERTY -->
+      <div id="page-process" class="app-page">
+        <div class="page-header"><div><div class="page-title">7-Day turnover process</div><div class="page-sub">Step-by-step checklist — repairs first, clean last, list same day as photos</div></div></div>
+        <div class="page-body">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;">
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px;">
+              <div style="background:var(--bg2);border-radius:var(--radius);padding:14px 16px;text-align:center;"><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--text);" id="ps-done">0</div><div style="font-size:11px;color:var(--text3);margin-top:3px;">Steps done</div></div>
+              <div style="background:var(--bg2);border-radius:var(--radius);padding:14px 16px;text-align:center;"><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--text);" id="ps-total">32</div><div style="font-size:11px;color:var(--text3);margin-top:3px;">Total steps</div></div>
+              <div style="background:var(--bg2);border-radius:var(--radius);padding:14px 16px;text-align:center;"><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--warn);" id="ps-day">Day -3</div><div style="font-size:11px;color:var(--text3);margin-top:3px;">Current phase</div></div>
+              <div style="background:var(--bg2);border-radius:var(--radius);padding:14px 16px;text-align:center;"><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--text);" id="ps-pct">0%</div><div style="font-size:11px;color:var(--text3);margin-top:3px;">Complete</div></div>
+            </div>
+            <div style="margin-bottom:16px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="font-size:12px;color:var(--text2);">Overall progress</span><span style="font-size:12px;font-weight:500;color:var(--text);" id="ps-pct-label">0 / 32 steps</span></div>
+              <div style="height:5px;background:var(--bg3);border-radius:4px;"><div id="ps-prog" style="height:100%;border-radius:4px;background:var(--accent);transition:width 0.3s;width:0%;"></div></div>
+            </div>
+            <div style="display:flex;gap:5px;margin-bottom:16px;" id="ps-day-bar"></div>
+            <div id="ps-panel"></div>
+            <button onclick="resetProcess()" style="font-size:12px;color:var(--text3);cursor:pointer;text-decoration:underline;background:none;border:none;padding:4px 0;font-family:inherit;">Reset all steps</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- INSIGHTS -->
+      <div id="page-insights" class="app-page">
+        <div class="page-header"><div><div class="page-title">Insights</div><div class="page-sub">Vacancy exposure, risk levels, and bottleneck analysis across all properties</div></div></div>
+        <div class="page-body">
+          <div class="metrics-row">
+            <div class="met-card danger"><div class="met-l">Total vacancy exposure</div><div class="met-v danger">$597</div><div class="met-trend">Across 2 active turnovers</div></div>
+            <div class="met-card"><div class="met-l">Daily rent at risk</div><div class="met-v warn">$57</div><div class="met-trend">$895 + $825 ÷ 30 days</div></div>
+            <div class="met-card good"><div class="met-l">Projected save vs avg</div><div class="met-v good">$383</div><div class="met-trend">If finished in 7 days</div></div>
+            <div class="met-card"><div class="met-l">Avg days this year</div><div class="met-v">14</div><div class="met-trend">Target: 7 days</div></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);">
+              <div class="sec-lbl" style="margin-bottom:14px;">Vacancy exposure by property</div>
+              <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <div><div style="font-size:13px;font-weight:500;color:var(--text);">412 Peach St — 2B</div><div style="font-size:11px;color:var(--text3);">$895/mo · 7 days vacant so far</div></div>
+                  <div style="font-size:14px;font-weight:500;color:var(--danger);">$209</div>
+                </div>
+                <div style="height:6px;background:var(--bg3);border-radius:4px;"><div style="width:55%;height:100%;background:var(--warn);border-radius:4px;"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <div><div style="font-size:13px;font-weight:500;color:var(--text);">809 Holland St — 1</div><div style="font-size:11px;color:var(--text3);">$825/mo · Not started · 26 days to move-out</div></div>
+                  <div style="font-size:14px;font-weight:500;color:var(--text2);">$0</div>
+                </div>
+                <div style="height:6px;background:var(--bg3);border-radius:4px;"><div style="width:10%;height:100%;background:var(--danger);border-radius:4px;"></div></div>
+              </div>
+            </div>
+
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);">
+              <div class="sec-lbl" style="margin-bottom:14px;">Risk assessment</div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--radius);">
+                  <div><div style="font-size:13px;font-weight:500;color:var(--danger);">412 Peach St — 2B</div><div style="font-size:11px;color:var(--text2);margin-top:2px;">Cleaning blocked · deposit deadline in 3 days</div></div>
+                  <span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);font-weight:500;">High risk</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--radius);">
+                  <div><div style="font-size:13px;font-weight:500;color:var(--warn);">809 Holland St — 1</div><div style="font-size:11px;color:var(--text2);margin-top:2px;">Notice not sent · 26 days to move-out</div></div>
+                  <span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border);font-weight:500;">Medium risk</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--accent-light);border:1px solid var(--accent-border);border-radius:var(--radius);">
+                  <div><div style="font-size:13px;font-weight:500;color:var(--accent);">220 W 8th St — 4</div><div style="font-size:11px;color:var(--text2);margin-top:2px;">Occupied · lease ends Aug 31</div></div>
+                  <span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-border);font-weight:500;">Low risk</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);">
+            <div class="sec-lbl" style="margin-bottom:14px;">Current bottleneck analysis</div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
+              <div style="padding:14px;background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--radius);">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Primary bottleneck</div>
+                <div style="font-size:14px;font-weight:500;color:var(--danger);margin-bottom:4px;">Deep cleaning not started</div>
+                <div style="font-size:12px;color:var(--text2);">Blocking repairs on 412 Peach St — every day here costs a day at the end</div>
+              </div>
+              <div style="padding:14px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--radius);">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Secondary bottleneck</div>
+                <div style="font-size:14px;font-weight:500;color:var(--warn);margin-bottom:4px;">Move-out notice not sent</div>
+                <div style="font-size:12px;color:var(--text2);">809 Holland St turnover cannot start until notice is legally served</div>
+              </div>
+              <div style="padding:14px;background:var(--accent-light);border:1px solid var(--accent-border);border-radius:var(--radius);">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Recommendation</div>
+                <div style="font-size:14px;font-weight:500;color:var(--accent);margin-bottom:4px;">Book cleaner today</div>
+                <div style="font-size:12px;color:var(--text2);">Resolving the cleaning block unlocks repairs and gets you back on the 7-day track</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRICING -->
+      <div id="page-pricing" class="app-page">
+        <div class="page-header"><div><div class="page-title">Plans & pricing</div><div class="page-sub">Start free — upgrade when you're ready</div></div></div>
+        <div class="page-body">
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:24px;">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow);">
+              <div style="font-size:11px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Starter</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:500;color:var(--text);line-height:1;">$19<span style="font-size:16px;font-family:'DM Sans',sans-serif;color:var(--text2);font-weight:400;">/mo</span></div>
+              <div style="font-size:12px;color:var(--text2);margin-top:6px;margin-bottom:20px;">For small landlords with up to 5 units</div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-check" style="color:var(--accent);font-size:14px;" aria-hidden="true"></i>Up to 5 properties</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-check" style="color:var(--accent);font-size:14px;" aria-hidden="true"></i>Adaptive turnover timeline</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-check" style="color:var(--accent);font-size:14px;" aria-hidden="true"></i>Document vault</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-check" style="color:var(--accent);font-size:14px;" aria-hidden="true"></i>Vacancy tracking</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);"><i class="ti ti-minus" style="font-size:14px;" aria-hidden="true"></i>Provider marketplace</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);"><i class="ti ti-minus" style="font-size:14px;" aria-hidden="true"></i>Listing sync</div>
+              </div>
+              <button class="btn-outline" style="width:100%;justify-content:center;" onclick="showToast('Starting your free trial...')">Get started free</button>
+            </div>
+
+            <div style="background:var(--text);border:1px solid var(--text);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-md);position:relative;">
+              <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:white;font-size:10px;padding:3px 12px;border-radius:20px;font-weight:500;white-space:nowrap;">Most popular</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Professional</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:500;color:white;line-height:1;">$49<span style="font-size:16px;font-family:'DM Sans',sans-serif;color:rgba(255,255,255,0.5);font-weight:400;">/mo</span></div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px;margin-bottom:20px;">For property managers with up to 25 units</div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);"><i class="ti ti-check" style="color:var(--accent2);font-size:14px;" aria-hidden="true"></i>Up to 25 properties</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);"><i class="ti ti-check" style="color:var(--accent2);font-size:14px;" aria-hidden="true"></i>Adaptive turnover timeline</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);"><i class="ti ti-check" style="color:var(--accent2);font-size:14px;" aria-hidden="true"></i>Full provider marketplace</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);"><i class="ti ti-check" style="color:var(--accent2);font-size:14px;" aria-hidden="true"></i>Zillow + Apartments.com sync</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);"><i class="ti ti-check" style="color:var(--accent2);font-size:14px;" aria-hidden="true"></i>Vacancy exposure insights</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.8);"><i class="ti ti-check" style="color:var(--accent2);font-size:14px;" aria-hidden="true"></i>Risk & bottleneck analysis</div>
+              </div>
+              <button class="btn-app" style="width:100%;justify-content:center;background:var(--accent);" onclick="showToast('Upgrading to Professional...')">Upgrade to Pro</button>
+            </div>
+
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow);">
+              <div style="font-size:11px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Provider</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:500;color:var(--text);line-height:1;">$29<span style="font-size:16px;font-family:'DM Sans',sans-serif;color:var(--text2);font-weight:400;">/mo</span></div>
+              <div style="font-size:12px;color:var(--text2);margin-top:6px;margin-bottom:20px;">For cleaners, contractors, and inspectors</div>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-check" style="color:var(--accent);font-size:14px;" aria-hidden="true"></i>Provider profile listing</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-check" style="color:var(--accent);font-size:14px;" aria-hidden="true"></i>Receive job requests</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-check" style="color:var(--accent);font-size:14px;" aria-hidden="true"></i>Invoice and quote upload</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-check" style="color:var(--accent);font-size:14px;" aria-hidden="true"></i>Featured placement option</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);"><i class="ti ti-check" style="color:var(--accent);font-size:14px;" aria-hidden="true"></i>Rating and review profile</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);"><i class="ti ti-minus" style="font-size:14px;" aria-hidden="true"></i>Property management tools</div>
+              </div>
+              <button class="btn-outline" style="width:100%;justify-content:center;" onclick="showToast('Registering as a provider...')">Join as provider</button>
+            </div>
+          </div>
+
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;text-align:center;">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text);margin-bottom:6px;">All plans include a 14-day free trial</div>
+            <div style="font-size:13px;color:var(--text2);font-weight:300;">No credit card required. Cancel anytime.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-addprop" class="app-page">
+        <div class="page-header"><div><div class="page-title">Add property</div><div class="page-sub">Register a unit and RentSet generates an adaptive turnover plan based on your specific situation</div></div></div>
+        <div class="page-body">
+          <div class="form-card">
+            <div style="font-size:12px;color:var(--text2);font-weight:500;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">Property details</div>
+            <div class="form-grid2"><div class="form-row"><label class="form-label2">Street address</label><input class="form-input2" type="text" placeholder="123 Main St" /></div><div class="form-row"><label class="form-label2">Unit number</label><input class="form-input2" type="text" placeholder="Unit 2B" /></div></div>
+            <div class="form-grid2"><div class="form-row"><label class="form-label2">City</label><input class="form-input2" type="text" placeholder="Erie" /></div><div class="form-row"><label class="form-label2">State</label><select class="form-input2"><option>Pennsylvania</option><option>Ohio</option><option>New York</option><option>Florida</option></select></div></div>
+            <div class="form-grid2"><div class="form-row"><label class="form-label2">Bedrooms</label><select class="form-input2"><option>1 bed</option><option>2 bed</option><option>3 bed</option><option>4+ bed</option></select></div><div class="form-row"><label class="form-label2">Bathrooms</label><select class="form-input2"><option>1 bath</option><option>1.5 bath</option><option>2 bath</option></select></div></div>
+            <div class="form-grid2"><div class="form-row"><label class="form-label2">Move-out date</label><input class="form-input2" type="date" /></div><div class="form-row"><label class="form-label2">Monthly rent ($)</label><input class="form-input2" type="number" placeholder="895" /></div></div>
+            <div style="font-size:12px;color:var(--text2);font-weight:500;margin:20px 0 16px;padding-top:16px;border-top:1px solid var(--border);">Adaptive plan settings</div>
+            <div class="form-grid2"><div class="form-row"><label class="form-label2">Unit type</label><select class="form-input2"><option>Apartment</option><option>Single-family home</option><option>Student rental</option><option>Luxury unit</option><option>Multi-unit</option></select></div><div class="form-row"><label class="form-label2">Unit condition</label><select class="form-input2"><option>Light turnover</option><option>Moderate repairs</option><option>Heavy repairs</option></select></div></div>
+            <div class="form-row"><label class="form-label2">Optimization goal</label><select class="form-input2"><option>Fastest lease</option><option>Lowest cost</option><option>Best quality finish</option></select></div>
+            <div style="background:var(--accent-light);border:1px solid var(--accent-border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--accent);">RentSet will generate a custom timeline, estimated vacancy exposure, and risk level based on these settings.</div>
+            <div class="form-row"><label class="form-label2">Notes (optional)</label><input class="form-input2" type="text" placeholder="Any special considerations..." /></div>
+            <button class="form-submit" onclick="showToast('Property registered — generating your adaptive turnover plan...')">Register property &amp; generate adaptive plan →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ti ti-check"></i><span id="toast-msg"></span></div>
+
+<script>
+function showAuth(type){
+  document.getElementById('landing').style.display='none';
+  document.getElementById('auth-section').style.display='block';
+  document.getElementById('app-section').style.display='none';
+  document.querySelectorAll('.auth-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+type).classList.add('active');
+}
+function toggleAuth(type){
+  document.querySelectorAll('.auth-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+type).classList.add('active');
+}
+function backToLanding(){
+  document.getElementById('landing').style.display='block';
+  document.getElementById('auth-section').style.display='none';
+  document.getElementById('app-section').style.display='none';
+  window.scrollTo(0,0);
+}
+function doLogin(){
+  const email=document.getElementById('login-email').value;
+  if(!email){showToast('Please enter your email');return;}
+  document.querySelectorAll('.auth-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-onboard').classList.add('active');
+}
+function doSignup(){
+  const name=document.getElementById('signup-name').value||'User';
+  document.getElementById('user-name-display').textContent=name;
+  document.getElementById('user-avatar').textContent=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.querySelectorAll('.auth-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-onboard').classList.add('active');
+}
+function nextOnboard(step){
+  document.querySelectorAll('.onboard-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('ob'+step).classList.add('active');
+  for(let i=1;i<=3;i++){
+    const d=document.getElementById('od'+i);
+    if(i<step)d.className='op-dot done';
+    else if(i===step)d.className='op-dot active';
+    else d.className='op-dot';
+  }
+}
+function selType(el){document.querySelectorAll('.prop-type-btn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+function enterApp(){
+  document.getElementById('auth-section').style.display='none';
+  document.getElementById('app-section').style.display='block';
+  renderProcess();
+}
+function navTo(page,el){
+  document.querySelectorAll('.app-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el)el.classList.add('active');
+}
+function selProp(n,el){
+  document.querySelectorAll('#page-dashboard .prop-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  ['tl-p1','tl-p2','tl-p3'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('tl-p'+n).style.display='block';
+}
+function filterProv(type,btn){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.prov-card').forEach(c=>{c.style.display=(type==='all'||c.dataset.type===type)?'block':'none';});
+}
+const pDays=[
+  {label:'Day -3',sublabel:'Pre move-out',icon:'ti-calendar',badge:'Do before Day 0',badgeColor:'#633806',badgeBg:'#FDF8EE',
+   insight:'Pre-communication and pre-booking is what separates a 5-day turnover from a 14-day one.',
+   steps:[
+    {id:'p1',name:'Send cleaning requirement list to tenant',detail:'What they must clean to avoid deductions — give them time to act',tags:['pre','law']},
+    {id:'p2',name:'Confirm exact move-out date and time',detail:'Stay in close contact — if they vacate early, start immediately',tags:['pre']},
+    {id:'p3',name:'Pre-book cleaner for Day 4',detail:'Good cleaners fill up fast — this is your biggest bottleneck if not pre-booked',tags:['critical']},
+    {id:'p4',name:'Pre-book photographer for Day 5 morning',detail:'Photos and listing same day — pre-booking means no waiting',tags:['pre']},
+    {id:'p5',name:'Give contractor a heads up — put them on standby',detail:'They need lead time — a same-day call on Day 0 rarely works',tags:['pre']},
+  ]},
+  {label:'Day 0',sublabel:'Move-out',icon:'ti-door-exit',badge:'Most critical day',badgeColor:'#A32D2D',badgeBg:'#FDF2F1',
+   insight:'Everything today determines how fast the rest goes. Do not wait until tomorrow for the inspection.',
+   steps:[
+    {id:'p6',name:'Collect all keys — confirm full vacancy',detail:'Walk every room, check closets, storage, parking spots'},
+    {id:'p7',name:'Change locks immediately',detail:'Same hour the tenant leaves — install lockbox for vendor access',tags:['critical']},
+    {id:'p8',name:'Conduct full initial inspection same day',detail:'Timestamped photos of every issue — legal protection for the deposit',tags:['critical','law']},
+    {id:'p9',name:'Document all damage beyond normal wear',detail:'Written notes and photos for every item you plan to deduct'},
+    {id:'p10',name:'Note all deposit deductions',detail:'Start the 30-day clock — PA §250.512 requires return within 30 days',tags:['law']},
+  ]},
+  {label:'Day 1',sublabel:'Scope',icon:'ti-clipboard-list',badge:'Approve everything today',badgeColor:'#633806',badgeBg:'#FDF8EE',
+   insight:'Every hour of delay here cascades into every downstream task. Approve the budget on the same call you get the quote.',
+   steps:[
+    {id:'p11',name:'Build full repair scope from inspection notes',detail:'Paint, plumbing, appliances, carpet, fixtures — every single item'},
+    {id:'p12',name:'Get contractor on site — quote and approve same day',detail:'Pre-vetted contractor means no shopping around. Approve on the call.',tags:['critical']},
+    {id:'p13',name:'Confirm cleaner for Day 4',detail:'If pre-booked on Day -3, just confirm. If not, this is your critical blocker.',tags:['critical']},
+    {id:'p14',name:'Order all materials needed',detail:'Paint, fixtures, hardware — order for same-day or next-morning delivery'},
+  ]},
+  {label:'Day 2–3',sublabel:'Paint & repairs',icon:'ti-hammer',badge:'All trades simultaneously',badgeColor:'#3C3489',badgeBg:'#EEEDFE',
+   insight:'Painting and all maintenance at the same time — different trades in different rooms. Clean comes after so dust does not matter yet.',
+   steps:[
+    {id:'p15',name:'Painting — all rooms',detail:'Full walls, ceilings, trim. Dust and debris do not matter yet — clean is after.',tags:['parallel','critical']},
+    {id:'p16',name:'Plumbing repairs',detail:'Faucets, toilets, pipes — runs parallel with painting in different rooms',tags:['parallel']},
+    {id:'p17',name:'Appliance repairs or replacements',detail:'Stove, fridge, dishwasher — runs parallel, different area from painters',tags:['parallel']},
+    {id:'p18',name:'Carpet replacement or steam clean',detail:'Schedule after painting is done in those rooms'},
+    {id:'p19',name:'Install fixtures, hardware, small upgrades',detail:'New handles, light fixtures, outlet covers — while contractors are already on site',tags:['quick']},
+    {id:'p20',name:'Verify all repair work is complete',detail:'Walk through with contractor before they leave — sign off on everything',tags:['critical']},
+  ]},
+  {label:'Day 4',sublabel:'Deep clean',icon:'ti-vacuum',badge:'Clean once, clean right',badgeColor:'#085041',badgeBg:'#EBF5F0',
+   insight:'Cleaning after all work is done means you only clean once. All paint dust and contractor mess gets removed in one pass.',
+   steps:[
+    {id:'p21',name:'Deep clean — full unit',detail:'Kitchen, bathrooms, floors, walls, windows — every surface',tags:['critical']},
+    {id:'p22',name:'Clean inside appliances',detail:'Fridge, oven, dishwasher — tenants always check these'},
+    {id:'p23',name:'Touch up any paint marks from cleaning',detail:'Quick pass with a brush after cleaning is done',tags:['quick']},
+    {id:'p24',name:'Final walkthrough — verify unit is show-ready',detail:'Fresh eyes on every room. Would you pay to live here?',tags:['critical']},
+  ]},
+  {label:'Day 5',sublabel:'Photos & list',icon:'ti-camera',badge:'List same day',badgeColor:'#085041',badgeBg:'#EBF5F0',
+   insight:'Clean unit goes straight to photos, photos go straight to listing. Every day vacant is lost rent.',
+   steps:[
+    {id:'p25',name:'Professional photos — pre-booked morning slot',detail:'MLS-ready photos delivered same day — clean unit photographs perfectly',tags:['critical']},
+    {id:'p26',name:'Write listing — highlight all upgrades done',detail:'New paint, fixtures, clean carpet — mention every upgrade'},
+    {id:'p27',name:'List on Zillow, Apartments.com, Facebook Marketplace simultaneously',detail:'All three at once — maximum exposure from day one',tags:['critical']},
+    {id:'p28',name:'Set showing availability starting same day',detail:'Be available within hours — good tenants move fast'},
+  ]},
+  {label:'Day 6–7',sublabel:'Sign & fill',icon:'ti-file-check',badge:'Unit filled',badgeColor:'#085041',badgeBg:'#EBF5F0',
+   insight:'Tenant quality matters more than speed — but the two are not mutually exclusive. A fast, thorough screening process gets you both.',
+   steps:[
+    {id:'p29',name:'Review all applications — credit, income, rental history',detail:'Rental history is the best predictor of a good tenant — always check references'},
+    {id:'p30',name:'Meet top candidate in person — complete application together',detail:'Fill it out yourself asking the questions — catches inconsistencies',tags:['critical']},
+    {id:'p31',name:'Sign lease, collect first month + security deposit',detail:'Same meeting if possible — do not let them leave without signing',tags:['critical','law']},
+    {id:'p32',name:'Hand over keys — conduct move-in walkthrough with new tenant',detail:'Document unit condition together at move-in — protects both parties',tags:['law']},
+  ]},
+];
+
+let pChecked={};
+let pCurrentDay=0;
+
+function pTotalSteps(){return pDays.reduce((a,d)=>a+d.steps.length,0);}
+function pDoneCount(){return Object.values(pChecked).filter(Boolean).length;}
+
+function pTagHtml(tags){
+  if(!tags||!tags.length) return '';
+  const labels={law:'PA law',parallel:'runs parallel',critical:'critical path',pre:'pre move-out',quick:'quick win'};
+  return '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">'+tags.map(t=>{
+    const styles={law:'background:#EEF4FB;color:#2E6DA4;',parallel:'background:#F3F0FA;color:#6B5DB0;',critical:'background:#FDF2F1;color:#C0392B;',pre:'background:#FDF8EE;color:#A07020;',quick:'background:#F0F7E8;color:#4A7A20;'};
+    return `<span style="font-size:10px;padding:1px 6px;border-radius:3px;font-weight:500;${styles[t]||''}">${labels[t]||t}</span>`;
+  }).join('')+'</div>';
+}
+
+function renderProcess(){
+  const d=pDays[pCurrentDay];
+  const done=pDoneCount();
+  const total=pTotalSteps();
+  const pct=Math.round(done/total*100);
+  document.getElementById('ps-done').textContent=done;
+  document.getElementById('ps-pct').textContent=pct+'%';
+  document.getElementById('ps-pct-label').textContent=done+' / '+total+' steps';
+  document.getElementById('ps-prog').style.width=pct+'%';
+  const dayLabels=['-3','0','1','3','4','5','7'];
+  let activeDayIdx=0;
+  pDays.forEach((pd,i)=>{
+    const dayDone=pd.steps.every(s=>pChecked[s.id]);
+    if(dayDone) activeDayIdx=i;
+  });
+  document.getElementById('ps-day').textContent='Day '+dayLabels[Math.min(activeDayIdx,6)];
+
+  const bar=document.getElementById('ps-day-bar');
+  bar.innerHTML=pDays.map((pd,i)=>{
+    const dayDone=pd.steps.every(s=>pChecked[s.id]);
+    const isActive=i===pCurrentDay;
+    let bg=isActive?'var(--surface)':'var(--bg2)';
+    let border=isActive?'1.5px solid var(--accent)':'1px solid var(--border)';
+    let numColor=dayDone?'#085041':isActive?'var(--accent)':'var(--text)';
+    if(dayDone) bg='#EBF5F0';
+    return `<div onclick="pSelectDay(${i})" style="flex:1;padding:7px 4px;border-radius:var(--radius-sm);border:${border};text-align:center;cursor:pointer;background:${bg};">
+      <div style="font-size:10px;color:var(--text3);">${pd.sublabel}</div>
+      <div style="font-size:12px;font-weight:500;color:${numColor};">${pd.label}</div>
+    </div>`;
+  }).join('');
+
+  let html='';
+  if(done===total){
+    html+=`<div style="background:#EBF5F0;border:1px solid var(--accent-border);border-radius:var(--radius);padding:14px;text-align:center;margin-bottom:12px;">
+      <div style="font-size:14px;font-weight:500;color:#085041;margin-bottom:4px;"><i class="ti ti-trophy" style="font-size:15px;vertical-align:-2px;margin-right:6px;" aria-hidden="true"></i>Turnover complete — unit filled in 7 days or less</div>
+      <div style="font-size:12px;color:#1A6B50;">All ${total} steps done. New tenant signed and moved in.</div>
+    </div>`;
+  }
+
+  html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:var(--radius-sm);background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ${d.icon}" style="font-size:17px;" aria-hidden="true"></i></div>
+        <div><div style="font-size:13px;font-weight:500;color:var(--text);">${d.label} — ${d.sublabel}</div><div style="font-size:11px;color:var(--text2);margin-top:2px;line-height:1.5;">${d.insight}</div></div>
+      </div>
+      <span style="font-size:10px;padding:3px 9px;border-radius:20px;white-space:nowrap;background:${d.badgeBg};color:${d.badgeColor};">${d.badge}</span>
+    </div>
+    <div>`;
+  d.steps.forEach(s=>{
+    const sdone=pChecked[s.id];
+    html+=`<div onclick="pToggleStep('${s.id}')" style="display:flex;align-items:flex-start;gap:12px;padding:9px 16px;border-bottom:1px solid var(--border);cursor:pointer;${sdone?'opacity:0.55;':''}transition:background 0.1s;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+      <div style="width:20px;height:20px;border-radius:50%;border:1.5px solid ${sdone?'var(--accent)':'var(--border2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;background:${sdone?'var(--accent)':'transparent'};">
+        ${sdone?'<i class="ti ti-check" style="font-size:11px;color:white;" aria-hidden="true"></i>':''}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:13px;color:var(--text);${sdone?'text-decoration:line-through;color:var(--text3);':''}">${s.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;line-height:1.5;">${s.detail}</div>
+        ${pTagHtml(s.tags)}
+      </div>
+    </div>`;
+  });
+  html+=`</div></div>`;
+  document.getElementById('ps-panel').innerHTML=html;
+}
+
+function pToggleStep(id){pChecked[id]=!pChecked[id];renderProcess();}
+function pSelectDay(idx){pCurrentDay=idx;renderProcess();}
+function resetProcess(){pChecked={};pCurrentDay=0;renderProcess();}
+
+let tt;
+function showToast(msg){
+  document.getElementById('toast-msg').textContent=msg;
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(tt);
+  tt=setTimeout(()=>t.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>

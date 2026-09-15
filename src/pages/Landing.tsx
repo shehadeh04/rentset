@@ -238,7 +238,10 @@ export default function Landing() {
                 actually stand.
               </p>
             </div>
-            <Link to="/signup" className="btn bg-brand-500 px-6 py-3 text-base text-white hover:bg-brand-400">
+            <Link
+              to="/signup"
+              className="btn shrink-0 whitespace-nowrap bg-brand-500 px-6 py-3 text-base text-white hover:bg-brand-400"
+            >
               Get started free
             </Link>
           </div>

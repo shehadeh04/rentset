@@ -18,6 +18,7 @@ interface ScheduledTask {
 }
 
 const categoryLabel: Record<TaskCategory, string> = {
+  prep: 'Pre-move-out prep',
   inspection: 'Inspection',
   repair: 'Repair',
   cleaning: 'Cleaning',

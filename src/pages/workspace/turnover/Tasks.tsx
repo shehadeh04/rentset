@@ -21,6 +21,11 @@ interface VendorOption {
 }
 
 const categories: { key: TaskCategory; label: string; hint: string }[] = [
+  {
+    key: 'prep',
+    label: 'Pre-move-out prep',
+    hint: 'Get ahead of it during the notice period — before the unit is even empty.',
+  },
   { key: 'inspection', label: 'Inspection', hint: 'Walk the unit and note what needs attention.' },
   { key: 'repair', label: 'Repairs', hint: 'Work that needs to happen before the unit is ready.' },
   { key: 'cleaning', label: 'Cleaning', hint: 'Getting the unit move-in ready.' },

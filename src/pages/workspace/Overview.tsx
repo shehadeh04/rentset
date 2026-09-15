@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { daysSince, formatMoney, todayISO } from '@/lib/format'
+import { addDays, daysSince, formatMoney, todayISO } from '@/lib/format'
+import { buildTemplateTasks } from '@/lib/checklist-template'
 import type { TurnoverStage, UnitStatus } from '@/lib/database.types'
 
 interface UnitRow {
@@ -328,17 +329,32 @@ function UnitRowItem({ unit, landlordId }: { unit: UnitRow; landlordId: string }
 
   const startTurnover = useMutation({
     mutationFn: async () => {
+      const noticeDate = todayISO()
+      // 30 days is the standard PA lease notice period, and 9 days is the
+      // research-backed standard-path turnover length — both are editable
+      // starting estimates, not fixed rules.
+      const moveOutDate = addDays(noticeDate, 30)
+      const targetReadyDate = addDays(moveOutDate, 9)
+
       const { data, error } = await supabase
         .from('turnovers')
         .insert({
           unit_id: unit.id,
           landlord_id: landlordId,
           stage: 'notice',
-          notice_date: todayISO(),
+          notice_date: noticeDate,
+          move_out_date: moveOutDate,
+          target_ready_date: targetReadyDate,
         })
         .select('id')
         .single()
       if (error) throw error
+
+      const { error: tasksError } = await supabase
+        .from('turnover_tasks')
+        .insert(buildTemplateTasks(data.id, landlordId, moveOutDate))
+      if (tasksError) throw tasksError
+
       await supabase.from('units').update({ status: 'turnover' }).eq('id', unit.id)
       return data.id as string
     },

@@ -4,6 +4,6 @@
 
 export type UnitStatus = 'occupied' | 'vacant' | 'turnover'
 export type TurnoverStage = 'notice' | 'inspection' | 'repairs' | 'cleaning' | 'listing' | 'leased'
-export type TaskCategory = 'inspection' | 'repair' | 'cleaning' | 'vendor' | 'listing'
+export type TaskCategory = 'prep' | 'inspection' | 'repair' | 'cleaning' | 'vendor' | 'listing'
 export type TaskStatus = 'open' | 'in_progress' | 'done'
 export type ListingStatus = 'draft' | 'published' | 'leased'

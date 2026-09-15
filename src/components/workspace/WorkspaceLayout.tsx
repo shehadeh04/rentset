@@ -14,8 +14,8 @@ export function WorkspaceLayout() {
 
   return (
     <div className="flex min-h-screen bg-paper">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-white md:flex">
-        <div className="px-6 py-5">
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-line bg-surface md:flex">
+        <div className="px-5 py-5">
           <Logo />
         </div>
         <nav className="flex-1 space-y-0.5 px-3">
@@ -25,10 +25,8 @@ export function WorkspaceLayout() {
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-brand-50 text-brand-800'
-                    : 'text-ink-soft hover:bg-black/[0.03] hover:text-ink'
+                `block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  isActive ? 'bg-ink text-white' : 'text-ink-soft hover:bg-ink/5 hover:text-ink'
                 }`
               }
             >
@@ -45,15 +43,33 @@ export function WorkspaceLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-line bg-white px-4 py-3 md:hidden">
+        <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3 md:hidden">
           <Logo />
           <button onClick={() => signOut()} className="btn-ghost text-sm">
             Log out
           </button>
         </header>
-        <main className="flex-1 px-6 py-8 md:px-10 md:py-10">
+
+        <main className="flex-1 px-4 pb-24 pt-6 sm:px-6 md:px-10 md:py-10">
           <Outlet />
         </main>
+
+        <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface md:hidden">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                `flex-1 border-t-2 px-2 py-3 text-center text-xs font-medium ${
+                  isActive ? 'border-ink text-ink' : 'border-transparent text-ink-faint'
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
       </div>
     </div>
   )

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { formatDate, formatMoney } from '@/lib/format'
+import { categoryLabels } from '@/lib/task-categories'
 import type { TaskCategory, TaskStatus } from '@/lib/database.types'
 
 interface TaskRow {
@@ -20,19 +21,7 @@ interface VendorOption {
   name: string
 }
 
-const categories: { key: TaskCategory; label: string; hint: string }[] = [
-  {
-    key: 'prep',
-    label: 'Pre-move-out prep',
-    hint: 'Get ahead of it during the notice period — before the unit is even empty.',
-  },
-  { key: 'inspection', label: 'Inspection', hint: 'Walk the unit and note what needs attention.' },
-  { key: 'repair', label: 'Repairs', hint: 'Work that needs to happen before the unit is ready.' },
-  { key: 'cleaning', label: 'Cleaning', hint: 'Getting the unit move-in ready.' },
-  { key: 'vendor', label: 'Vendor visits', hint: 'Anything else you’re coordinating with a vendor.' },
-  { key: 'listing', label: 'Listing prep', hint: 'Photos, description, and anything before it goes live.' },
-]
-
+const categoryOrder: TaskCategory[] = ['prep', 'inspection', 'repair', 'cleaning', 'vendor', 'listing']
 const statusOrder: TaskStatus[] = ['open', 'in_progress', 'done']
 const statusLabel: Record<TaskStatus, string> = {
   open: 'Open',
@@ -47,7 +36,8 @@ const statusStyle: Record<TaskStatus, string> = {
 
 export function Tasks({ turnoverId, landlordId }: { turnoverId: string; landlordId: string }) {
   const qc = useQueryClient()
-  const [openForm, setOpenForm] = useState<TaskCategory | null>(null)
+  const [filter, setFilter] = useState<TaskCategory | 'all'>('all')
+  const [adding, setAdding] = useState(false)
 
   const { data: tasks } = useQuery({
     queryKey: ['turnover_tasks', turnoverId],
@@ -86,70 +76,94 @@ export function Tasks({ turnoverId, landlordId }: { turnoverId: string; landlord
     onSuccess: () => qc.invalidateQueries({ queryKey: ['turnover_tasks', turnoverId] }),
   })
 
+  const sorted = useMemo(() => {
+    if (!tasks) return []
+    return [...tasks].sort((a, b) => {
+      if (a.category !== b.category) return categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category)
+      if (a.due_date && b.due_date) return a.due_date < b.due_date ? -1 : 1
+      if (a.due_date) return -1
+      if (b.due_date) return 1
+      return 0
+    })
+  }, [tasks])
+
+  const visible = filter === 'all' ? sorted : sorted.filter((t) => t.category === filter)
+
   return (
-    <div className="mt-6 space-y-5">
-      {categories.map((cat) => {
-        const items = tasks?.filter((t) => t.category === cat.key) ?? []
-        return (
-          <div key={cat.key} className="card p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-medium text-ink">{cat.label}</h3>
-                <p className="text-sm text-ink-faint">{cat.hint}</p>
-              </div>
-              <button
-                className="btn-ghost shrink-0 text-sm"
-                onClick={() => setOpenForm(openForm === cat.key ? null : cat.key)}
-              >
-                Add
-              </button>
-            </div>
+    <div className="card mt-6 overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-6">
+        <h2 className="font-semibold text-ink">Tasks</h2>
+        <button className="btn-secondary py-1.5 text-sm" onClick={() => setAdding((v) => !v)}>
+          {adding ? 'Cancel' : 'Add task'}
+        </button>
+      </div>
 
-            {items.length > 0 && (
-              <ul className="mt-4 divide-y divide-line border-t border-line">
-                {items.map((task) => {
-                  const vendor = vendors?.find((v) => v.id === task.vendor_id)
-                  const nextStatus = statusOrder[(statusOrder.indexOf(task.status) + 1) % 3]
-                  return (
-                    <li key={task.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                      <div>
-                        <p className="text-sm font-medium text-ink">{task.title}</p>
-                        <p className="text-xs text-ink-faint">
-                          {vendor && <span>{vendor.name}</span>}
-                          {vendor && (task.due_date || task.cost) && <span className="mx-1.5">&middot;</span>}
-                          {task.due_date && <span>Due {formatDate(task.due_date)}</span>}
-                          {task.due_date && task.cost && <span className="mx-1.5">&middot;</span>}
-                          {task.cost != null && <span>{formatMoney(task.cost)}</span>}
-                        </p>
-                      </div>
-                      <button
-                        className={`tag transition-colors ${statusStyle[task.status]}`}
-                        onClick={() => cycleStatus.mutate({ taskId: task.id, next: nextStatus })}
-                      >
-                        {statusLabel[task.status]}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
+      <div className="flex gap-1 overflow-x-auto border-b border-line px-4 py-2 sm:px-6">
+        {(['all', ...categoryOrder] as const).map((c) => (
+          <button
+            key={c}
+            onClick={() => setFilter(c)}
+            className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+              filter === c ? 'bg-ink text-white' : 'text-ink-soft hover:bg-ink/5'
+            }`}
+          >
+            {c === 'all' ? 'All' : categoryLabels[c]}
+          </button>
+        ))}
+      </div>
 
-            {items.length === 0 && openForm !== cat.key && (
-              <p className="mt-3 text-sm text-ink-faint">Nothing added yet.</p>
-            )}
+      {adding && (
+        <AddTaskForm
+          turnoverId={turnoverId}
+          landlordId={landlordId}
+          defaultCategory={filter === 'all' ? 'prep' : filter}
+          vendors={vendors ?? []}
+          onDone={() => setAdding(false)}
+        />
+      )}
 
-            {openForm === cat.key && (
-              <AddTaskForm
-                turnoverId={turnoverId}
-                landlordId={landlordId}
-                category={cat.key}
-                vendors={vendors ?? []}
-                onDone={() => setOpenForm(null)}
-              />
-            )}
-          </div>
-        )
-      })}
+      {visible.length === 0 && !adding && (
+        <p className="px-4 py-8 text-center text-sm text-ink-faint sm:px-6">
+          {filter === 'all' ? 'No tasks yet.' : `No ${categoryLabels[filter].toLowerCase()} tasks yet.`}
+        </p>
+      )}
+
+      {visible.length > 0 && (
+        <ul className="divide-y divide-line">
+          {visible.map((task) => {
+            const vendor = vendors?.find((v) => v.id === task.vendor_id)
+            const nextStatus = statusOrder[(statusOrder.indexOf(task.status) + 1) % 3]
+            return (
+              <li key={task.id} className="flex items-center gap-3 px-4 py-3 sm:px-6">
+                <span className="tag hidden shrink-0 border border-ink/15 text-ink-faint sm:inline-flex">
+                  {categoryLabels[task.category]}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className={`truncate text-sm font-medium ${task.status === 'done' ? 'text-ink-faint line-through' : 'text-ink'}`}>
+                    {task.title}
+                  </p>
+                  <p className="truncate text-xs text-ink-faint sm:hidden">{categoryLabels[task.category]}</p>
+                  {(vendor || task.due_date || task.cost != null) && (
+                    <p className="truncate text-xs text-ink-faint">
+                      {vendor && <span>{vendor.name}</span>}
+                      {vendor && (task.due_date || task.cost != null) && <span className="mx-1.5">&middot;</span>}
+                      {task.due_date && <span>Due {formatDate(task.due_date)}</span>}
+                      {task.due_date && task.cost != null && <span className="mx-1.5">&middot;</span>}
+                      {task.cost != null && <span>{formatMoney(task.cost)}</span>}
+                    </p>
+                  )}
+                </div>
+                <button
+                  className={`tag shrink-0 transition-colors ${statusStyle[task.status]}`}
+                  onClick={() => cycleStatus.mutate({ taskId: task.id, next: nextStatus })}
+                >
+                  {statusLabel[task.status]}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </div>
   )
 }
@@ -157,17 +171,18 @@ export function Tasks({ turnoverId, landlordId }: { turnoverId: string; landlord
 function AddTaskForm({
   turnoverId,
   landlordId,
-  category,
+  defaultCategory,
   vendors,
   onDone,
 }: {
   turnoverId: string
   landlordId: string
-  category: TaskCategory
+  defaultCategory: TaskCategory
   vendors: VendorOption[]
   onDone: () => void
 }) {
   const qc = useQueryClient()
+  const [category, setCategory] = useState<TaskCategory>(defaultCategory)
   const [title, setTitle] = useState('')
   const [vendorId, setVendorId] = useState('')
   const [dueDate, setDueDate] = useState('')
@@ -194,12 +209,26 @@ function AddTaskForm({
 
   return (
     <form
-      className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-line bg-paper p-4 sm:grid-cols-4"
+      className="grid grid-cols-2 gap-3 border-b border-line bg-paper px-4 py-4 sm:grid-cols-5 sm:px-6"
       onSubmit={(e) => {
         e.preventDefault()
         mutation.mutate()
       }}
     >
+      <div className="col-span-2 sm:col-span-1">
+        <label className="field-label">Category</label>
+        <select
+          className="field-input"
+          value={category}
+          onChange={(e) => setCategory(e.target.value as TaskCategory)}
+        >
+          {categoryOrder.map((c) => (
+            <option key={c} value={c}>
+              {categoryLabels[c]}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="col-span-2 sm:col-span-1">
         <label className="field-label">Task</label>
         <input className="field-input" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -237,7 +266,7 @@ function AddTaskForm({
           onChange={(e) => setCost(e.target.value)}
         />
       </div>
-      <div className="col-span-2 flex items-end gap-3 sm:col-span-4">
+      <div className="col-span-2 flex items-end gap-3 sm:col-span-5">
         <button type="submit" className="btn-primary" disabled={mutation.isPending}>
           {mutation.isPending ? 'Saving…' : 'Add task'}
         </button>

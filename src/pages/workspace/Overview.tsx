@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { formatMoney, todayISO } from '@/lib/format'
+import { daysSince, formatMoney, todayISO } from '@/lib/format'
 import type { TurnoverStage, UnitStatus } from '@/lib/database.types'
 
 interface UnitRow {
@@ -14,7 +14,7 @@ interface UnitRow {
   square_feet: number | null
   monthly_rent: number | null
   status: UnitStatus
-  turnovers: { id: string; stage: TurnoverStage }[]
+  turnovers: { id: string; stage: TurnoverStage; notice_date: string }[]
 }
 
 interface PropertyRow {
@@ -51,7 +51,7 @@ export default function Overview() {
       const { data, error } = await supabase
         .from('properties')
         .select(
-          'id, name, address_line1, city, state, units(id, unit_label, bedrooms, bathrooms, square_feet, monthly_rent, status, turnovers(id, stage))'
+          'id, name, address_line1, city, state, units(id, unit_label, bedrooms, bathrooms, square_feet, monthly_rent, status, turnovers(id, stage, notice_date))'
         )
         .eq('landlord_id', user!.id)
         .order('created_at', { ascending: false })
@@ -363,6 +363,11 @@ function UnitRowItem({ unit, landlordId }: { unit: UnitRow; landlordId: string }
             ? `Turnover · ${stageLabels[openTurnover.stage]}`
             : unit.status[0].toUpperCase() + unit.status.slice(1)}
         </span>
+        {unit.status === 'turnover' && openTurnover && (
+          <span className="text-xs text-ink-faint">
+            {daysSince(openTurnover.notice_date)} days
+          </span>
+        )}
         {openTurnover ? (
           <button
             className="btn-secondary py-1.5 text-sm"

@@ -42,6 +42,8 @@ const statusStyles: Record<UnitStatus, string> = {
   turnover: 'bg-brand-50 text-brand-700',
 }
 
+const ROW_GRID = 'grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 sm:grid-cols-[2fr_1fr_1fr_auto]'
+
 export default function Overview() {
   const { user } = useAuth()
   const [addingProperty, setAddingProperty] = useState(false)
@@ -62,6 +64,10 @@ export default function Overview() {
     },
   })
 
+  const totalUnits = properties?.reduce((sum, p) => sum + p.units.length, 0) ?? 0
+  const inTurnover =
+    properties?.reduce((sum, p) => sum + p.units.filter((u) => u.status === 'turnover').length, 0) ?? 0
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -76,16 +82,31 @@ export default function Overview() {
         </button>
       </div>
 
+      {!isLoading && properties && properties.length > 0 && (
+        <div className="mt-6 grid grid-cols-3 divide-x divide-ink/10 border-y border-ink/10">
+          {[
+            ['Properties', properties.length],
+            ['Units', totalUnits],
+            ['In turnover', inTurnover],
+          ].map(([label, value]) => (
+            <div key={label} className="px-1 py-4 sm:px-6">
+              <p className="font-display text-2xl font-semibold text-ink">{value}</p>
+              <p className="tag mt-0.5 text-ink-faint">{label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {addingProperty && (
         <AddPropertyForm landlordId={user!.id} onDone={() => setAddingProperty(false)} />
       )}
 
-      <div className="mt-8 space-y-5">
-        {isLoading && <p className="text-sm text-ink-faint">Loading…</p>}
+      <div className="mt-8">
+        {isLoading && <p className="text-sm text-ink-faint">Loading&hellip;</p>}
 
         {!isLoading && properties?.length === 0 && !addingProperty && (
           <div className="card flex flex-col items-start gap-3 p-10">
-            <p className="font-medium text-ink">No properties yet</p>
+            <p className="font-semibold text-ink">No properties yet</p>
             <p className="text-sm text-ink-soft">
               Add your first property to start tracking its units and turnovers.
             </p>
@@ -95,9 +116,19 @@ export default function Overview() {
           </div>
         )}
 
-        {properties?.map((property) => (
-          <PropertyCard key={property.id} property={property} landlordId={user!.id} />
-        ))}
+        {properties && properties.length > 0 && (
+          <div className="card overflow-hidden">
+            <div className={`${ROW_GRID} border-b border-ink/10 px-4 py-2 sm:px-6`}>
+              <p className="tag text-ink-faint">Unit</p>
+              <p className="tag hidden text-ink-faint sm:block">Rent</p>
+              <p className="tag text-ink-faint">Status</p>
+              <p />
+            </div>
+            {properties.map((property) => (
+              <PropertySection key={property.id} property={property} landlordId={user!.id} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -171,7 +202,7 @@ function AddPropertyForm({ landlordId, onDone }: { landlordId: string; onDone: (
         </div>
       </div>
       {mutation.isError && (
-        <p className="sm:col-span-2 text-sm text-red-600">Couldn’t save that property. Try again.</p>
+        <p className="sm:col-span-2 text-sm text-red-600">Couldn&rsquo;t save that property. Try again.</p>
       )}
       <div className="flex gap-3 sm:col-span-2">
         <button type="submit" className="btn-primary" disabled={mutation.isPending}>
@@ -185,20 +216,20 @@ function AddPropertyForm({ landlordId, onDone }: { landlordId: string; onDone: (
   )
 }
 
-function PropertyCard({ property, landlordId }: { property: PropertyRow; landlordId: string }) {
+function PropertySection({ property, landlordId }: { property: PropertyRow; landlordId: string }) {
   const [addingUnit, setAddingUnit] = useState(false)
 
   return (
-    <div className="card p-6">
-      <div className="flex items-start justify-between">
+    <div className="border-b border-ink/10 last:border-b-0">
+      <div className="flex items-start justify-between gap-3 bg-ink/[0.02] px-4 py-3 sm:px-6">
         <div>
-          <h2 className="font-medium text-ink">{property.name}</h2>
-          <p className="text-sm text-ink-faint">
+          <p className="text-sm font-semibold text-ink">{property.name}</p>
+          <p className="text-xs text-ink-faint">
             {property.address_line1}, {property.city}, {property.state}
           </p>
         </div>
-        <button className="btn-ghost text-sm" onClick={() => setAddingUnit((v) => !v)}>
-          Add unit
+        <button className="btn-ghost shrink-0 py-1 text-xs" onClick={() => setAddingUnit((v) => !v)}>
+          + Add unit
         </button>
       </div>
 
@@ -211,16 +242,12 @@ function PropertyCard({ property, landlordId }: { property: PropertyRow; landlor
       )}
 
       {property.units.length === 0 && !addingUnit && (
-        <p className="mt-4 text-sm text-ink-faint">No units added yet.</p>
+        <p className="px-4 py-4 text-sm text-ink-faint sm:px-6">No units added yet.</p>
       )}
 
-      {property.units.length > 0 && (
-        <div className="mt-5 divide-y divide-line border-t border-line">
-          {property.units.map((unit) => (
-            <UnitRowItem key={unit.id} unit={unit} landlordId={landlordId} />
-          ))}
-        </div>
-      )}
+      {property.units.map((unit) => (
+        <UnitRowItem key={unit.id} unit={unit} landlordId={landlordId} />
+      ))}
     </div>
   )
 }
@@ -261,7 +288,7 @@ function AddUnitForm({
 
   return (
     <form
-      className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-line bg-paper p-4 sm:grid-cols-4"
+      className="grid grid-cols-2 gap-3 border-b border-ink/10 bg-paper px-4 py-4 sm:grid-cols-4 sm:px-6"
       onSubmit={(e) => {
         e.preventDefault()
         mutation.mutate()
@@ -365,42 +392,44 @@ function UnitRowItem({ unit, landlordId }: { unit: UnitRow; landlordId: string }
   })
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 py-3">
-      <div className="flex items-center gap-3">
-        <span className="font-medium text-ink">{unit.unit_label}</span>
-        <span className="text-sm text-ink-faint">
+    <div className={`${ROW_GRID} border-b border-ink/10 px-4 py-3 last:border-b-0 sm:px-6`}>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-ink">{unit.unit_label}</p>
+        <p className="text-xs text-ink-faint">
           {unit.bedrooms} bd &middot; {unit.bathrooms} ba
-          {unit.monthly_rent ? ` · ${formatMoney(unit.monthly_rent)}/mo` : ''}
-        </span>
+        </p>
       </div>
-      <div className="flex items-center gap-3">
+      <p className="hidden text-sm text-ink-soft sm:block">
+        {unit.monthly_rent ? `${formatMoney(unit.monthly_rent)}/mo` : '—'}
+      </p>
+      <div>
         <span className={`tag ${statusStyles[unit.status]}`}>
           {unit.status === 'turnover' && openTurnover
-            ? `Turnover · ${stageLabels[openTurnover.stage]}`
+            ? stageLabels[openTurnover.stage]
             : unit.status[0].toUpperCase() + unit.status.slice(1)}
         </span>
         {unit.status === 'turnover' && openTurnover && (
-          <span className="text-xs text-ink-faint">
-            {daysSince(openTurnover.notice_date)} days
+          <span className="ml-1.5 hidden text-xs text-ink-faint sm:inline">
+            {daysSince(openTurnover.notice_date)}d
           </span>
         )}
-        {openTurnover ? (
-          <button
-            className="btn-secondary py-1.5 text-sm"
-            onClick={() => navigate(`/app/turnovers/${openTurnover.id}`)}
-          >
-            View turnover
-          </button>
-        ) : (
-          <button
-            className="btn-secondary py-1.5 text-sm"
-            onClick={() => startTurnover.mutate()}
-            disabled={startTurnover.isPending}
-          >
-            {startTurnover.isPending ? 'Starting…' : 'Start turnover'}
-          </button>
-        )}
       </div>
+      {openTurnover ? (
+        <button
+          className="btn-secondary py-1.5 text-xs sm:text-sm"
+          onClick={() => navigate(`/app/turnovers/${openTurnover.id}`)}
+        >
+          View
+        </button>
+      ) : (
+        <button
+          className="btn-secondary py-1.5 text-xs sm:text-sm"
+          onClick={() => startTurnover.mutate()}
+          disabled={startTurnover.isPending}
+        >
+          {startTurnover.isPending ? 'Starting…' : 'Start turnover'}
+        </button>
+      )}
     </div>
   )
 }

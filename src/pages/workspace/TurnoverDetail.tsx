@@ -3,10 +3,11 @@ import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { daysSince, formatDate, todayISO } from '@/lib/format'
+import { daysBetween, formatDate, todayISO } from '@/lib/format'
 import type { TurnoverStage } from '@/lib/database.types'
 import { Tasks } from '@/pages/workspace/turnover/Tasks'
 import { ListingPanel } from '@/pages/workspace/turnover/ListingPanel'
+import { Timeline } from '@/pages/workspace/turnover/Timeline'
 
 const stages: TurnoverStage[] = ['notice', 'inspection', 'repairs', 'cleaning', 'listing', 'leased']
 const stageLabels: Record<TurnoverStage, string> = {
@@ -100,7 +101,25 @@ export default function TurnoverDetail() {
   }
 
   const currentIndex = stages.indexOf(turnover.stage)
-  const days = daysSince(turnover.notice_date)
+  const today = todayISO()
+
+  let progress: { label: string; overTarget: boolean } | null = null
+  if (turnover.stage !== 'leased' && turnover.move_out_date) {
+    const dayNum = daysBetween(turnover.move_out_date, today)
+    if (dayNum < 0) {
+      progress = { label: `Move-out in ${-dayNum} day${-dayNum === 1 ? '' : 's'}`, overTarget: false }
+    } else {
+      const targetDays = turnover.target_ready_date
+        ? daysBetween(turnover.move_out_date, turnover.target_ready_date)
+        : null
+      const overTarget = targetDays !== null && dayNum > targetDays
+      progress = {
+        label:
+          `Day ${dayNum} since move-out` + (targetDays !== null ? ` · target ${targetDays}` : ''),
+        overTarget,
+      }
+    }
+  }
 
   return (
     <div className="max-w-3xl">
@@ -112,8 +131,10 @@ export default function TurnoverDetail() {
         <h1 className="font-display text-2xl font-medium text-ink">
           {turnover.unit.property.name} &middot; {turnover.unit.unit_label}
         </h1>
-        {turnover.stage !== 'leased' && days !== null && (
-          <span className="text-sm text-ink-faint">{days} days in turnover</span>
+        {progress && (
+          <span className={`text-sm ${progress.overTarget ? 'text-red-600' : 'text-ink-faint'}`}>
+            {progress.label}
+          </span>
         )}
       </div>
 
@@ -188,6 +209,7 @@ export default function TurnoverDetail() {
         </div>
       </div>
 
+      <Timeline turnoverId={turnover.id} moveOutDate={turnover.move_out_date} />
       <Tasks turnoverId={turnover.id} landlordId={user!.id} />
       <ListingPanel turnoverId={turnover.id} landlordId={user!.id} />
     </div>

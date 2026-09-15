@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth-context'
 import { formatDate } from '@/lib/format'
 import { Link } from 'react-router-dom'
 import type { TaskCategory, TaskStatus } from '@/lib/database.types'
+import { categoryLabels } from '@/lib/task-categories'
 
 interface ScheduledTask {
   id: string
@@ -17,14 +18,6 @@ interface ScheduledTask {
   }
 }
 
-const categoryLabel: Record<TaskCategory, string> = {
-  prep: 'Pre-move-out prep',
-  inspection: 'Inspection',
-  repair: 'Repair',
-  cleaning: 'Cleaning',
-  vendor: 'Vendor visit',
-  listing: 'Listing prep',
-}
 
 function dueGroup(dueDate: string): 'Overdue' | 'This week' | 'Later' {
   const due = new Date(dueDate + 'T00:00:00').getTime()
@@ -102,7 +95,7 @@ export default function Schedule() {
                     <div>
                       <p className="text-sm font-medium text-ink">{task.title}</p>
                       <p className="text-xs text-ink-faint">
-                        {categoryLabel[task.category]} &middot;{' '}
+                        {categoryLabels[task.category]} &middot;{' '}
                         <Link
                           to={`/app/turnovers/${task.turnover.id}`}
                           className="hover:text-ink-soft hover:underline"

@@ -32,3 +32,9 @@ export function addDays(iso: string, days: number) {
   d.setDate(d.getDate() + days)
   return d.toISOString().slice(0, 10)
 }
+
+export function daysBetween(fromISO: string, toISO: string) {
+  const from = new Date(fromISO + 'T00:00:00').getTime()
+  const to = new Date(toISO + 'T00:00:00').getTime()
+  return Math.round((to - from) / (1000 * 60 * 60 * 24))
+}

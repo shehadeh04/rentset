@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { daysSince, formatDate, todayISO } from '@/lib/format'
 import type { TurnoverStage } from '@/lib/database.types'
+import { Tasks } from '@/pages/workspace/turnover/Tasks'
+import { ListingPanel } from '@/pages/workspace/turnover/ListingPanel'
 
 const stages: TurnoverStage[] = ['notice', 'inspection', 'repairs', 'cleaning', 'listing', 'leased']
 const stageLabels: Record<TurnoverStage, string> = {
@@ -185,6 +187,9 @@ export default function TurnoverDetail() {
           {saveDetails.isSuccess && <span className="text-sm text-brand-700">Saved.</span>}
         </div>
       </div>
+
+      <Tasks turnoverId={turnover.id} landlordId={user!.id} />
+      <ListingPanel turnoverId={turnover.id} landlordId={user!.id} />
     </div>
   )
 }

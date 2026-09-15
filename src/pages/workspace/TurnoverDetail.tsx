@@ -3,11 +3,12 @@ import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { daysBetween, formatDate, todayISO } from '@/lib/format'
-import type { TurnoverStage } from '@/lib/database.types'
+import { daysBetween, formatDate, formatMoney, todayISO } from '@/lib/format'
+import type { TaskStatus, TurnoverStage } from '@/lib/database.types'
 import { Tasks } from '@/pages/workspace/turnover/Tasks'
 import { ListingPanel } from '@/pages/workspace/turnover/ListingPanel'
 import { Timeline } from '@/pages/workspace/turnover/Timeline'
+import { StatCard } from '@/components/StatCard'
 
 const stages: TurnoverStage[] = ['notice', 'inspection', 'repairs', 'cleaning', 'listing', 'leased']
 const stageLabels: Record<TurnoverStage, string> = {
@@ -47,6 +48,18 @@ export default function TurnoverDetail() {
         .single()
       if (error) throw error
       return data as unknown as TurnoverRow
+    },
+  })
+
+  const { data: tasks } = useQuery({
+    queryKey: ['turnover_tasks', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('turnover_tasks')
+        .select('id, status, due_date, cost')
+        .eq('turnover_id', id!)
+      if (error) throw error
+      return data as { id: string; status: TaskStatus; due_date: string | null; cost: number | null }[]
     },
   })
 
@@ -121,6 +134,15 @@ export default function TurnoverDetail() {
     }
   }
 
+  const doneCount = tasks?.filter((t) => t.status === 'done').length ?? 0
+  const totalTasks = tasks?.length ?? 0
+  const overdueCount = tasks?.filter((t) => t.status !== 'done' && t.due_date && t.due_date < today).length ?? 0
+  const totalCost = tasks?.reduce((sum, t) => sum + (t.cost ?? 0), 0) ?? 0
+  const daysLeft =
+    turnover.stage !== 'leased' && turnover.target_ready_date
+      ? daysBetween(today, turnover.target_ready_date)
+      : null
+
   return (
     <div className="max-w-3xl">
       <Link to="/app" className="text-sm text-ink-soft hover:text-ink">
@@ -137,6 +159,19 @@ export default function TurnoverDetail() {
           </span>
         )}
       </div>
+
+      {totalTasks > 0 && (
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatCard
+            label="Days left"
+            value={daysLeft === null ? '—' : daysLeft}
+            accent={daysLeft !== null && daysLeft < 0 ? 'red' : 'ink'}
+          />
+          <StatCard label="Tasks done" value={`${doneCount}/${totalTasks}`} accent="ink" />
+          <StatCard label="Overdue" value={overdueCount} accent={overdueCount > 0 ? 'red' : 'ink'} />
+          <StatCard label="Cost" value={formatMoney(totalCost)} accent="ink" />
+        </div>
+      )}
 
       <div className="card mt-6 p-6">
         <p className="field-label mb-4">Stage</p>

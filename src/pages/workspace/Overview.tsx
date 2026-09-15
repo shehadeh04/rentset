@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { addDays, daysSince, formatMoney, todayISO } from '@/lib/format'
+import { addDays, daysBetween, daysSince, formatMoney, todayISO } from '@/lib/format'
 import { buildTemplateTasks } from '@/lib/checklist-template'
-import type { TurnoverStage, UnitStatus } from '@/lib/database.types'
+import { StatCard } from '@/components/StatCard'
+import type { TaskCategory, TaskStatus, TurnoverStage, UnitStatus } from '@/lib/database.types'
 
 interface UnitRow {
   id: string
@@ -25,6 +26,32 @@ interface PropertyRow {
   city: string
   state: string
   units: UnitRow[]
+}
+
+interface TaskAlertRow {
+  id: string
+  title: string
+  category: TaskCategory
+  status: TaskStatus
+  due_date: string | null
+  cost: number | null
+  turnover: { id: string; unit: { unit_label: string; property: { name: string } } }
+}
+
+interface TurnoverStatRow {
+  id: string
+  stage: TurnoverStage
+  move_out_date: string | null
+  target_ready_date: string | null
+  leased_date: string | null
+  unit: { unit_label: string; property: { name: string } }
+}
+
+interface Alert {
+  id: string
+  severity: 'red' | 'amber'
+  message: string
+  turnoverId: string
 }
 
 const stageLabels: Record<TurnoverStage, string> = {
@@ -64,9 +91,88 @@ export default function Overview() {
     },
   })
 
+  const { data: allTasks } = useQuery({
+    queryKey: ['all_tasks', user!.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('turnover_tasks')
+        .select(
+          'id, title, category, status, due_date, cost, turnover:turnovers(id, unit:units(unit_label, property:properties(name)))'
+        )
+        .eq('landlord_id', user!.id)
+      if (error) throw error
+      return data as unknown as TaskAlertRow[]
+    },
+  })
+
+  const { data: allTurnovers } = useQuery({
+    queryKey: ['all_turnovers', user!.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('turnovers')
+        .select(
+          'id, stage, move_out_date, target_ready_date, leased_date, unit:units(unit_label, property:properties(name))'
+        )
+        .eq('landlord_id', user!.id)
+      if (error) throw error
+      return data as unknown as TurnoverStatRow[]
+    },
+  })
+
   const totalUnits = properties?.reduce((sum, p) => sum + p.units.length, 0) ?? 0
-  const inTurnover =
-    properties?.reduce((sum, p) => sum + p.units.filter((u) => u.status === 'turnover').length, 0) ?? 0
+
+  const today = todayISO()
+
+  const stats = useMemo(() => {
+    const activeTurnovers = allTurnovers?.filter((t) => t.stage !== 'leased') ?? []
+    const completed = (allTurnovers ?? []).filter((t) => t.stage === 'leased' && t.move_out_date && t.leased_date)
+    const avgDays = completed.length
+      ? Math.round(
+          completed.reduce((sum, t) => sum + daysBetween(t.move_out_date!, t.leased_date!), 0) / completed.length
+        )
+      : null
+
+    const openTasks = (allTasks ?? []).filter((t) => t.status !== 'done')
+    const dueToday = openTasks.filter((t) => t.due_date === today).length
+    const overdue = openTasks.filter((t) => t.due_date && t.due_date < today)
+    const totalCost = (allTasks ?? []).reduce((sum, t) => sum + (t.cost ?? 0), 0)
+
+    return { activeCount: activeTurnovers.length, avgDays, dueToday, overdue, totalCost }
+  }, [allTasks, allTurnovers, today])
+
+  const alerts = useMemo(() => {
+    const list: Alert[] = []
+    const overdueByTurnover = new Map<string, { count: number; label: string }>()
+    for (const t of allTasks ?? []) {
+      if (t.status === 'done' || !t.due_date || t.due_date >= today) continue
+      const key = t.turnover.id
+      const label = `${t.turnover.unit.property.name} · ${t.turnover.unit.unit_label}`
+      const entry = overdueByTurnover.get(key) ?? { count: 0, label }
+      entry.count += 1
+      overdueByTurnover.set(key, entry)
+    }
+    for (const [turnoverId, { count, label }] of overdueByTurnover) {
+      list.push({
+        id: `overdue-${turnoverId}`,
+        severity: 'red',
+        message: `${count} task${count === 1 ? '' : 's'} overdue on ${label}`,
+        turnoverId,
+      })
+    }
+
+    for (const t of allTurnovers ?? []) {
+      if (t.stage === 'leased' || !t.target_ready_date || t.target_ready_date >= today) continue
+      const daysOver = daysBetween(t.target_ready_date, today)
+      list.push({
+        id: `target-${t.id}`,
+        severity: 'amber',
+        message: `${t.unit.property.name} · ${t.unit.unit_label} is ${daysOver} day${daysOver === 1 ? '' : 's'} past target`,
+        turnoverId: t.id,
+      })
+    }
+
+    return list.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === 'red' ? -1 : 1)).slice(0, 4)
+  }, [allTasks, allTurnovers, today])
 
   return (
     <div>
@@ -74,7 +180,9 @@ export default function Overview() {
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Properties</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Every property and unit you manage, and where each one stands.
+            {properties && properties.length > 0
+              ? `${properties.length} propert${properties.length === 1 ? 'y' : 'ies'} · ${totalUnits} unit${totalUnits === 1 ? '' : 's'}`
+              : 'Every property and unit you manage, and where each one stands.'}
           </p>
         </div>
         <button className="btn-primary" onClick={() => setAddingProperty((v) => !v)}>
@@ -83,18 +191,56 @@ export default function Overview() {
       </div>
 
       {!isLoading && properties && properties.length > 0 && (
-        <div className="mt-6 grid grid-cols-3 divide-x divide-ink/10 border-y border-ink/10">
-          {[
-            ['Properties', properties.length],
-            ['Units', totalUnits],
-            ['In turnover', inTurnover],
-          ].map(([label, value]) => (
-            <div key={label} className="px-1 py-4 sm:px-6">
-              <p className="font-display text-2xl font-semibold text-ink">{value}</p>
-              <p className="tag mt-0.5 text-ink-faint">{label}</p>
+        <>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <StatCard label="Active turnovers" value={stats.activeCount} accent="ink" />
+            <StatCard label="Avg. turnover days" value={stats.avgDays ?? '—'} accent="ink" />
+            <StatCard
+              label="Tasks due today"
+              value={stats.dueToday}
+              accent={stats.dueToday > 0 ? 'amber' : 'ink'}
+            />
+            <StatCard
+              label="Overdue tasks"
+              value={stats.overdue.length}
+              accent={stats.overdue.length > 0 ? 'red' : 'ink'}
+            />
+          </div>
+
+          {stats.totalCost > 0 && (
+            <p className="mt-3 text-sm text-ink-soft">
+              <span className="font-semibold text-ink">{formatMoney(stats.totalCost)}</span> in tracked
+              repair &amp; vendor costs across all turnovers.
+            </p>
+          )}
+
+          {alerts.length > 0 && (
+            <div className="mt-6 space-y-2">
+              {alerts.map((alert) => (
+                <div
+                  key={alert.id}
+                  className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 ${
+                    alert.severity === 'red'
+                      ? 'border-red-200 bg-red-50'
+                      : 'border-brand-200 bg-brand-50'
+                  }`}
+                >
+                  <p className={`text-sm font-medium ${alert.severity === 'red' ? 'text-red-800' : 'text-brand-800'}`}>
+                    {alert.message}
+                  </p>
+                  <Link
+                    to={`/app/turnovers/${alert.turnoverId}`}
+                    className={`shrink-0 text-sm font-semibold hover:underline ${
+                      alert.severity === 'red' ? 'text-red-700' : 'text-brand-700'
+                    }`}
+                  >
+                    View turnover &rarr;
+                  </Link>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {addingProperty && (

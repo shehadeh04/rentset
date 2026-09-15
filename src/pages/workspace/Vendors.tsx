@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { placesConfigured } from '@/lib/places'
 import { NearbyVendorSearch } from './NearbyVendorSearch'
 
 interface VendorRow {
@@ -62,15 +61,7 @@ export default function Vendors() {
         </div>
       </div>
 
-      {searching && !placesConfigured && (
-        <p className="mt-6 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Nearby vendor search isn’t connected yet.
-        </p>
-      )}
-
-      {searching && placesConfigured && (
-        <NearbyVendorSearch landlordId={user!.id} onDone={() => setSearching(false)} />
-      )}
+      {searching && <NearbyVendorSearch onDone={() => setSearching(false)} />}
 
       {adding && <AddVendorForm landlordId={user!.id} onDone={() => setAdding(false)} />}
 

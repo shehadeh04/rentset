@@ -46,7 +46,7 @@ export default function Login() {
         <Logo />
       </Link>
       <div className="card w-full max-w-sm p-8">
-        <h1 className="font-display text-xl font-medium text-ink">Log in</h1>
+        <h1 className="font-display text-xl font-semibold tracking-tight text-ink">Log in</h1>
         <p className="mt-1 text-sm text-ink-soft">Welcome back.</p>
 
         {!supabaseConfigured && (

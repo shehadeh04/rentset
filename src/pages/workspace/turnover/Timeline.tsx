@@ -14,9 +14,9 @@ interface TaskRow {
 
 const statusOrder: TaskStatus[] = ['open', 'in_progress', 'done']
 const statusStyle: Record<TaskStatus, string> = {
-  open: 'border border-line bg-white text-ink-soft',
-  in_progress: 'bg-clay-100 text-clay-600',
-  done: 'bg-brand-50 text-brand-700',
+  open: 'border border-ink/15 text-ink-soft',
+  in_progress: 'bg-brand-50 text-brand-700',
+  done: 'bg-ink text-white',
 }
 const statusLabel: Record<TaskStatus, string> = {
   open: 'Open',
@@ -88,12 +88,12 @@ export function Timeline({ turnoverId, moveOutDate }: { turnoverId: string; move
             <li key={date} className="flex gap-4">
               <div className="flex flex-col items-center">
                 <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded text-xs font-bold ${
                     isToday
-                      ? 'bg-brand-700 text-white'
+                      ? 'bg-ink text-white'
                       : isPast
                         ? 'bg-brand-50 text-brand-700'
-                        : 'border border-line bg-white text-ink-faint'
+                        : 'border border-ink/15 text-ink-faint'
                   }`}
                 >
                   {i + 1}
@@ -103,16 +103,12 @@ export function Timeline({ turnoverId, moveOutDate }: { turnoverId: string; move
                 )}
               </div>
               <div className="pb-6">
-                <p className="text-sm font-medium text-ink">
+                <p className="text-sm font-semibold text-ink">
                   {offset !== null ? dayLabel(offset) : formatDate(date)}
                   <span className="ml-2 font-normal text-ink-faint">
                     {offset !== null ? formatDate(date) : ''}
                   </span>
-                  {isToday && (
-                    <span className="ml-2 rounded-full bg-brand-700 px-2 py-0.5 text-xs font-medium text-white">
-                      Today
-                    </span>
-                  )}
+                  {isToday && <span className="tag ml-2 bg-brand-500 text-white">Today</span>}
                 </p>
                 <ul className="mt-2 space-y-1.5">
                   {dayTasks.map((task) => {
@@ -120,7 +116,7 @@ export function Timeline({ turnoverId, moveOutDate }: { turnoverId: string; move
                     return (
                       <li key={task.id} className="flex flex-wrap items-center gap-2">
                         <button
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${statusStyle[task.status]}`}
+                          className={`tag transition-colors ${statusStyle[task.status]}`}
                           onClick={() => cycleStatus.mutate({ taskId: task.id, next: nextStatus })}
                         >
                           {statusLabel[task.status]}

@@ -128,7 +128,7 @@ export default function TurnoverDetail() {
       </Link>
 
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="font-display text-2xl font-medium text-ink">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
           {turnover.unit.property.name} &middot; {turnover.unit.unit_label}
         </h1>
         {progress && (
@@ -139,7 +139,7 @@ export default function TurnoverDetail() {
       </div>
 
       <div className="card mt-6 p-6">
-        <p className="mb-4 text-sm font-medium text-ink-soft">Stage</p>
+        <p className="field-label mb-4">Stage</p>
         <div className="flex flex-wrap gap-2">
           {stages.map((stage, i) => {
             const isCurrent = stage === turnover.stage
@@ -149,12 +149,12 @@ export default function TurnoverDetail() {
                 key={stage}
                 onClick={() => setStage.mutate(stage)}
                 disabled={setStage.isPending}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                className={`rounded px-4 py-2 text-sm font-semibold transition-colors ${
                   isCurrent
-                    ? 'bg-brand-700 text-white'
+                    ? 'bg-ink text-white'
                     : isPast
                       ? 'bg-brand-50 text-brand-700 hover:bg-brand-100'
-                      : 'border border-line bg-white text-ink-soft hover:border-ink/30'
+                      : 'border border-ink/15 text-ink-soft hover:border-ink'
                 }`}
               >
                 {stageLabels[stage]}

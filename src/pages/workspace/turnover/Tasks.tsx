@@ -40,9 +40,9 @@ const statusLabel: Record<TaskStatus, string> = {
   done: 'Done',
 }
 const statusStyle: Record<TaskStatus, string> = {
-  open: 'border border-line bg-white text-ink-soft',
-  in_progress: 'bg-clay-100 text-clay-600',
-  done: 'bg-brand-50 text-brand-700',
+  open: 'border border-ink/15 text-ink-soft',
+  in_progress: 'bg-brand-50 text-brand-700',
+  done: 'bg-ink text-white',
 }
 
 export function Tasks({ turnoverId, landlordId }: { turnoverId: string; landlordId: string }) {
@@ -123,7 +123,7 @@ export function Tasks({ turnoverId, landlordId }: { turnoverId: string; landlord
                         </p>
                       </div>
                       <button
-                        className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${statusStyle[task.status]}`}
+                        className={`tag transition-colors ${statusStyle[task.status]}`}
                         onClick={() => cycleStatus.mutate({ taskId: task.id, next: nextStatus })}
                       >
                         {statusLabel[task.status]}

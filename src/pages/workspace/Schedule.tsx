@@ -66,7 +66,7 @@ export default function Schedule() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-medium text-ink">Schedule</h1>
+      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Schedule</h1>
       <p className="mt-1 text-sm text-ink-soft">Everything with a due date, across every unit.</p>
 
       <div className="mt-8 space-y-8">

@@ -37,9 +37,9 @@ const stageLabels: Record<TurnoverStage, string> = {
 }
 
 const statusStyles: Record<UnitStatus, string> = {
-  occupied: 'bg-brand-50 text-brand-700',
-  vacant: 'bg-clay-50 text-clay-600',
-  turnover: 'bg-amber-50 text-amber-700',
+  occupied: 'border border-ink/15 text-ink-soft',
+  vacant: 'border border-ink/15 text-ink-soft',
+  turnover: 'bg-brand-50 text-brand-700',
 }
 
 export default function Overview() {
@@ -66,7 +66,7 @@ export default function Overview() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-medium text-ink">Properties</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Properties</h1>
           <p className="mt-1 text-sm text-ink-soft">
             Every property and unit you manage, and where each one stands.
           </p>
@@ -374,7 +374,7 @@ function UnitRowItem({ unit, landlordId }: { unit: UnitRow; landlordId: string }
         </span>
       </div>
       <div className="flex items-center gap-3">
-        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[unit.status]}`}>
+        <span className={`tag ${statusStyles[unit.status]}`}>
           {unit.status === 'turnover' && openTurnover
             ? `Turnover · ${stageLabels[openTurnover.stage]}`
             : unit.status[0].toUpperCase() + unit.status.slice(1)}

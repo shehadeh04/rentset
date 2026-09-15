@@ -46,7 +46,7 @@ export default function Signup() {
           <Logo />
         </Link>
         <div className="card w-full max-w-sm p-8 text-center">
-          <h1 className="font-display text-xl font-medium text-ink">Check your email</h1>
+          <h1 className="font-display text-xl font-semibold tracking-tight text-ink">Check your email</h1>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">
             We sent a confirmation link to finish setting up your account. Once
             you confirm, come back and log in.
@@ -65,7 +65,7 @@ export default function Signup() {
         <Logo />
       </Link>
       <div className="card w-full max-w-sm p-8">
-        <h1 className="font-display text-xl font-medium text-ink">Create your account</h1>
+        <h1 className="font-display text-xl font-semibold tracking-tight text-ink">Create your account</h1>
         <p className="mt-1 text-sm text-ink-soft">Start running your turnovers in one place.</p>
 
         {!supabaseConfigured && (

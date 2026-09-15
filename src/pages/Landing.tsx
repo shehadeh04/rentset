@@ -55,10 +55,10 @@ const features = [
 export default function Landing() {
   return (
     <div className="min-h-screen bg-paper">
-      <header className="sticky top-0 z-40 border-b border-line/70 bg-paper/90 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-ink/10 bg-paper/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Logo />
-          <nav className="hidden items-center gap-8 text-sm text-ink-soft md:flex">
+          <nav className="hidden items-center gap-8 text-sm font-medium text-ink-soft md:flex">
             <a href="#product" className="hover:text-ink">
               Product
             </a>
@@ -80,13 +80,13 @@ export default function Landing() {
       <main>
         {/* Hero */}
         <section className="mx-auto max-w-6xl px-6 pb-20 pt-16 md:pb-28 md:pt-24">
-          <div className="grid gap-14 md:grid-cols-2 md:items-center md:gap-8">
+          <div className="grid gap-14 md:grid-cols-2 md:items-start md:gap-8">
             <div>
-              <span className="inline-flex items-center rounded-full border border-line bg-white px-3 py-1 text-xs font-medium text-ink-soft">
-                For independent landlords & small property managers
+              <span className="tag border border-ink/15 text-ink-soft">
+                For independent landlords &amp; small property managers
               </span>
-              <h1 className="mt-5 font-display text-4xl font-medium leading-[1.1] text-ink md:text-5xl">
-                Turn units around faster, without losing track of anything.
+              <h1 className="mt-5 font-display text-5xl font-semibold leading-[1.05] tracking-tight text-ink md:text-6xl">
+                Turn units around faster.
               </h1>
               <p className="mt-5 max-w-lg text-lg leading-relaxed text-ink-soft">
                 RentSet is where you run every vacancy from notice to move-in —
@@ -109,18 +109,14 @@ export default function Landing() {
             </div>
 
             <div className="card p-6 md:p-7">
-              <p className="mb-5 text-sm font-medium text-ink-soft">
-                A turnover, start to finish
-              </p>
+              <p className="tag mb-5 text-ink-faint">A turnover, start to finish</p>
               <ol className="space-y-0">
                 {stages.map((stage, i) => (
                   <li key={stage.label} className="flex gap-4">
                     <div className="flex flex-col items-center">
                       <div
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                          i === 0
-                            ? 'bg-brand-700 text-white'
-                            : 'border border-line bg-white text-ink-faint'
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded text-xs font-bold ${
+                          i === 0 ? 'bg-ink text-white' : 'border border-ink/15 text-ink-faint'
                         }`}
                       >
                         {i + 1}
@@ -130,7 +126,7 @@ export default function Landing() {
                       )}
                     </div>
                     <div className="pb-6">
-                      <p className="text-sm font-medium text-ink">{stage.label}</p>
+                      <p className="text-sm font-semibold text-ink">{stage.label}</p>
                       <p className="text-sm text-ink-faint">{stage.hint}</p>
                     </div>
                   </li>
@@ -141,9 +137,9 @@ export default function Landing() {
         </section>
 
         {/* Pain points */}
-        <section className="border-y border-line bg-white">
+        <section className="border-y border-ink/10 bg-surface">
           <div className="mx-auto max-w-6xl px-6 py-16 md:py-20">
-            <h2 className="max-w-xl font-display text-2xl font-medium text-ink md:text-3xl">
+            <h2 className="max-w-xl font-display text-2xl font-semibold tracking-tight text-ink md:text-3xl">
               Most turnovers don’t fail because of one big mistake.
             </h2>
             <p className="mt-3 max-w-xl text-ink-soft">
@@ -153,8 +149,8 @@ export default function Landing() {
             </p>
             <div className="mt-10 grid gap-8 md:grid-cols-3">
               {painPoints.map((p) => (
-                <div key={p.title}>
-                  <h3 className="font-medium text-ink">{p.title}</h3>
+                <div key={p.title} className="border-t-2 border-ink pt-4">
+                  <h3 className="font-semibold text-ink">{p.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-ink-soft">{p.body}</p>
                 </div>
               ))}
@@ -164,7 +160,7 @@ export default function Landing() {
 
         {/* How it works */}
         <section id="how-it-works" className="mx-auto max-w-6xl px-6 py-20 md:py-28">
-          <h2 className="font-display text-2xl font-medium text-ink md:text-3xl">
+          <h2 className="font-display text-2xl font-semibold tracking-tight text-ink md:text-3xl">
             How it works
           </h2>
           <div className="mt-10 grid gap-10 md:grid-cols-4 md:gap-6">
@@ -191,8 +187,8 @@ export default function Landing() {
               },
             ].map((step) => (
               <div key={step.n}>
-                <p className="font-display text-2xl text-brand-600">{step.n}</p>
-                <h3 className="mt-2 font-medium text-ink">{step.title}</h3>
+                <p className="font-display text-2xl font-semibold text-brand-500">{step.n}</p>
+                <h3 className="mt-2 font-semibold text-ink">{step.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{step.body}</p>
               </div>
             ))}
@@ -200,15 +196,15 @@ export default function Landing() {
         </section>
 
         {/* Feature grid */}
-        <section id="product" className="border-y border-line bg-white">
+        <section id="product" className="border-y border-ink/10 bg-surface">
           <div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
-            <h2 className="font-display text-2xl font-medium text-ink md:text-3xl">
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-ink md:text-3xl">
               Everything a turnover touches, in one workspace
             </h2>
             <div className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((f) => (
                 <div key={f.title}>
-                  <h3 className="font-medium text-ink">{f.title}</h3>
+                  <h3 className="font-semibold text-ink">{f.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-ink-soft">{f.body}</p>
                 </div>
               ))}
@@ -218,27 +214,24 @@ export default function Landing() {
 
         {/* CTA */}
         <section className="mx-auto max-w-6xl px-6 py-20 md:py-28">
-          <div className="card flex flex-col items-start gap-6 bg-brand-900 p-10 text-brand-50 md:flex-row md:items-center md:justify-between md:p-14">
+          <div className="flex flex-col items-start gap-6 rounded-lg bg-ink p-10 text-white md:flex-row md:items-center md:justify-between md:p-14">
             <div>
-              <h2 className="font-display text-2xl font-medium md:text-3xl">
+              <h2 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
                 Run your next turnover in RentSet.
               </h2>
-              <p className="mt-2 max-w-md text-brand-100/90">
+              <p className="mt-2 max-w-md text-white/70">
                 Free to start. Add your first property and see where your
                 units actually stand.
               </p>
             </div>
-            <Link
-              to="/signup"
-              className="btn bg-white px-6 py-3 text-base text-brand-900 hover:bg-brand-50"
-            >
+            <Link to="/signup" className="btn bg-brand-500 px-6 py-3 text-base text-white hover:bg-brand-400">
               Get started free
             </Link>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-line">
+      <footer className="border-t border-ink/10">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-6 py-10 md:flex-row md:items-center">
           <Logo />
           <p className="text-sm text-ink-faint">

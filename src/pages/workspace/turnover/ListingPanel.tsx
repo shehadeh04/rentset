@@ -12,9 +12,9 @@ interface ListingRow {
 }
 
 const statusStyle: Record<ListingStatus, string> = {
-  draft: 'border border-line bg-white text-ink-soft',
+  draft: 'border border-ink/15 text-ink-soft',
   published: 'bg-brand-50 text-brand-700',
-  leased: 'bg-clay-100 text-clay-600',
+  leased: 'bg-ink text-white',
 }
 
 export function ListingPanel({ turnoverId, landlordId }: { turnoverId: string; landlordId: string }) {
@@ -97,7 +97,7 @@ export function ListingPanel({ turnoverId, landlordId }: { turnoverId: string; l
           </p>
         </div>
         {listing && (
-          <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${statusStyle[listing.status]}`}>
+          <span className={`tag shrink-0 ${statusStyle[listing.status]}`}>
             {listing.status[0].toUpperCase() + listing.status.slice(1)}
           </span>
         )}

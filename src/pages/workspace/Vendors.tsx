@@ -34,7 +34,7 @@ export default function Vendors() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-medium text-ink">Vendors</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Vendors</h1>
           <p className="mt-1 text-sm text-ink-soft">
             The contractors and cleaners you assign work to during a turnover.
           </p>

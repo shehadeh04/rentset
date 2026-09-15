@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
+import { placesConfigured } from '@/lib/places'
+import { NearbyVendorSearch } from './NearbyVendorSearch'
 
 interface VendorRow {
   id: string
@@ -14,6 +16,7 @@ interface VendorRow {
 export default function Vendors() {
   const { user } = useAuth()
   const [adding, setAdding] = useState(false)
+  const [searching, setSearching] = useState(false)
 
   const { data: vendors, isLoading } = useQuery({
     queryKey: ['vendors', user!.id],
@@ -37,10 +40,37 @@ export default function Vendors() {
             The contractors and cleaners you assign work to during a turnover.
           </p>
         </div>
-        <button className="btn-primary" onClick={() => setAdding((v) => !v)}>
-          Add vendor
-        </button>
+        <div className="flex gap-3">
+          <button
+            className="btn-secondary"
+            onClick={() => {
+              setSearching((v) => !v)
+              setAdding(false)
+            }}
+          >
+            Find nearby
+          </button>
+          <button
+            className="btn-primary"
+            onClick={() => {
+              setAdding((v) => !v)
+              setSearching(false)
+            }}
+          >
+            Add vendor
+          </button>
+        </div>
       </div>
+
+      {searching && !placesConfigured && (
+        <p className="mt-6 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          Nearby vendor search isn’t connected yet.
+        </p>
+      )}
+
+      {searching && placesConfigured && (
+        <NearbyVendorSearch landlordId={user!.id} onDone={() => setSearching(false)} />
+      )}
 
       {adding && <AddVendorForm landlordId={user!.id} onDone={() => setAdding(false)} />}
 

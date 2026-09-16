@@ -147,20 +147,14 @@ export default function Landing() {
               Turn units around faster.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-soft">
-              RentSet is where you run every vacancy from notice to move-in —
-              inspections, repairs, cleaning, vendors, and the listing — so you
-              always know exactly where each unit stands and how long it’s
-              taking.
+              Track every vacancy from notice to move-in — inspections, repairs,
+              cleaning, vendors, and the listing — all in one place.
             </p>
             <div className="mt-8">
               <Link to="/signup" className="btn-primary px-6 py-3 text-base">
                 Get started free
               </Link>
             </div>
-            <p className="mt-4 text-sm text-ink-faint">
-              No credit card required. Set up your first property in a couple of
-              minutes.
-            </p>
           </div>
 
           <div className="mt-16 md:mt-20">

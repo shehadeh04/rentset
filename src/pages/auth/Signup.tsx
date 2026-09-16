@@ -66,7 +66,9 @@ export default function Signup() {
       </Link>
       <div className="card w-full max-w-sm p-8">
         <h1 className="font-display text-xl font-semibold tracking-tight text-ink">Create your account</h1>
-        <p className="mt-1 text-sm text-ink-soft">Start running your turnovers in one place.</p>
+        <p className="mt-1 text-sm text-ink-soft">
+          Free to start, no credit card required. Set up your first property in a couple of minutes.
+        </p>
 
         {!supabaseConfigured && (
           <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">

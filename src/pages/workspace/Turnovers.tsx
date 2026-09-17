@@ -66,7 +66,7 @@ export default function Turnovers() {
             onClick={() => setShowClosed((v) => !v)}
             className={`seg-item border border-line ${showClosed ? 'seg-item-active' : 'bg-surface'}`}
           >
-            {showClosed ? 'Showing closed' : 'Hide closed'}
+            {showClosed ? 'Hide closed' : 'Show closed'}
           </button>
           <div className="seg">
             <button

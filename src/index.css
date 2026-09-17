@@ -101,4 +101,86 @@
     @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent;
     animation: shimmer 1.6s infinite;
   }
+
+  /* ---------------------------------------------------------------- */
+  /* Workspace system. Denser and squarer than the marketing surface:  */
+  /* hairline rules and whitespace carry the structure instead of      */
+  /* stacked bordered cards.                                           */
+  /* ---------------------------------------------------------------- */
+
+  .ws-title {
+    @apply text-[1.375rem] font-semibold tracking-[-0.015em] text-ink;
+  }
+  .ws-section {
+    @apply text-[0.8125rem] font-semibold tracking-[-0.01em] text-ink;
+  }
+  .ws-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint;
+  }
+  .ws-meta {
+    @apply text-[12px] leading-5 text-ink-faint;
+  }
+
+  .surface {
+    @apply rounded border border-line bg-surface;
+  }
+  .surface-flat {
+    @apply border border-line bg-surface;
+  }
+
+  /* Status: a quiet dot + sentence case, not a shouty uppercase chip. */
+  .state {
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap text-[12px] font-medium text-ink-soft;
+  }
+  .state::before {
+    content: '';
+    @apply h-1.5 w-1.5 shrink-0 rounded-full bg-ink-subtle;
+  }
+  .state-brand::before {
+    @apply bg-brand-500;
+  }
+  .state-positive::before {
+    @apply bg-positive-500;
+  }
+  .state-caution::before {
+    @apply bg-caution-500;
+  }
+  .state-critical::before {
+    @apply bg-critical-500;
+  }
+
+  .btn-brand {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+  }
+
+  /* Dense input, for tool surfaces rather than marketing forms. */
+  .input {
+    @apply w-full rounded border border-line-strong bg-surface px-3 py-2 text-[13px] text-ink placeholder:text-ink-faint transition-colors focus:border-ink focus:outline-none disabled:bg-sunken disabled:text-ink-faint;
+  }
+  .input-label {
+    @apply mb-1.5 block text-[12px] font-medium text-ink-soft;
+  }
+
+  /* Segmented control for view switching. */
+  .seg {
+    @apply inline-flex items-center gap-0.5 rounded border border-line bg-surface p-0.5;
+  }
+  .seg-item {
+    @apply inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[12px] font-medium text-ink-soft transition-colors hover:text-ink;
+  }
+  .seg-item-active {
+    @apply bg-ink text-white hover:text-white;
+  }
+
+  /* Data tables. */
+  .tbl-head {
+    @apply text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint;
+  }
+  .tbl-row {
+    @apply transition-colors hover:bg-deck;
+  }
+
+  .ws-link {
+    @apply text-ink-soft underline-offset-2 transition-colors hover:text-ink hover:underline;
+  }
 }

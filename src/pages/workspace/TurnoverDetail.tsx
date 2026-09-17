@@ -1,28 +1,23 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, CurrencyDollar, WarningCircle } from '@phosphor-icons/react'
+import { ArrowLeft, Check, WarningCircle } from '@phosphor-icons/react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
-import { daysBetween, formatDate, formatMoney, todayISO } from '@/lib/format'
-import type { TaskStatus, TurnoverStage } from '@/lib/database.types'
+import { formatDate, formatMoney, todayISO } from '@/lib/format'
+import { STAGES, stageBlurb, stageIndex, stageLabels, turnoverHealth } from '@/lib/turnover'
+import { unitPhoto } from '@/lib/photos'
+import { useSetTurnoverStage, useTurnoverTasks } from '@/lib/workspace-data'
+import { Tabs } from '@/components/ui/Tabs'
+import { Progress } from '@/components/ui/Progress'
+import { Skeleton } from '@/components/Skeleton'
+import { useToast } from '@/components/ui/Toast'
 import { Tasks } from '@/pages/workspace/turnover/Tasks'
 import { ListingPanel } from '@/pages/workspace/turnover/ListingPanel'
 import { Timeline } from '@/pages/workspace/turnover/Timeline'
-import { StatCard } from '@/components/StatCard'
-import { Skeleton } from '@/components/Skeleton'
+import type { TurnoverStage } from '@/lib/database.types'
 
-const stages: TurnoverStage[] = ['notice', 'inspection', 'repairs', 'cleaning', 'listing', 'leased']
-const stageLabels: Record<TurnoverStage, string> = {
-  notice: 'Notice',
-  inspection: 'Inspection',
-  repairs: 'Repairs',
-  cleaning: 'Cleaning',
-  listing: 'Listing',
-  leased: 'Leased',
-}
-
-interface TurnoverRow {
+interface TurnoverRecord {
   id: string
   stage: TurnoverStage
   notice_date: string
@@ -30,66 +25,17 @@ interface TurnoverRow {
   target_ready_date: string | null
   leased_date: string | null
   notes: string
-  unit: { id: string; unit_label: string; property: { id: string; name: string } }
+  unit: { id: string; unit_label: string; monthly_rent: number | null; property: { id: string; name: string } }
 }
 
-function StageRail({
-  currentStage,
-  onSelect,
-  disabled,
-}: {
-  currentStage: TurnoverStage
-  onSelect: (stage: TurnoverStage) => void
-  disabled: boolean
-}) {
-  const currentIndex = stages.indexOf(currentStage)
-  return (
-    <div className="panel p-5">
-      <p className="mb-4 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Stage</p>
-      <div>
-        {stages.map((stage, i) => {
-          const isCurrent = stage === currentStage
-          const isDone = i < currentIndex
-          const isReached = i <= currentIndex
-          return (
-            <button
-              key={stage}
-              onClick={() => onSelect(stage)}
-              disabled={disabled}
-              className="relative flex w-full items-start gap-3 pb-6 text-left last:pb-0 disabled:opacity-60"
-            >
-              {i < stages.length - 1 && (
-                <span
-                  className={`absolute left-[9px] top-5 h-full w-px transition-colors ${isReached ? 'bg-ink' : 'bg-line'}`}
-                  aria-hidden="true"
-                />
-              )}
-              <span
-                className={`relative z-10 flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${
-                  isCurrent
-                    ? 'bg-ink text-white'
-                    : isDone
-                      ? 'bg-ink text-white'
-                      : 'border-2 border-line-strong bg-surface text-ink-faint'
-                }`}
-              >
-                {isDone ? <Check size={10} weight="bold" /> : i + 1}
-              </span>
-              <span className={`pt-0.5 text-sm font-semibold ${isCurrent ? 'text-ink' : 'text-ink-faint'}`}>
-                {stageLabels[stage]}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
+type TabId = 'overview' | 'timeline' | 'tasks' | 'listing'
 
 export default function TurnoverDetail() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
   const qc = useQueryClient()
+  const toast = useToast()
+  const [tab, setTab] = useState<TabId>('overview')
 
   const { data: turnover, isLoading } = useQuery({
     queryKey: ['turnover', id],
@@ -97,26 +43,18 @@ export default function TurnoverDetail() {
       const { data, error } = await supabase
         .from('turnovers')
         .select(
-          'id, stage, notice_date, move_out_date, target_ready_date, leased_date, notes, unit:units(id, unit_label, property:properties(id, name))'
+          'id, stage, notice_date, move_out_date, target_ready_date, leased_date, notes, unit:units(id, unit_label, monthly_rent, property:properties(id, name))'
         )
         .eq('id', id!)
         .single()
       if (error) throw error
-      return data as unknown as TurnoverRow
+      return data as unknown as TurnoverRecord
     },
   })
 
-  const { data: tasks } = useQuery({
-    queryKey: ['turnover_tasks', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('turnover_tasks')
-        .select('id, status, due_date, cost')
-        .eq('turnover_id', id!)
-      if (error) throw error
-      return data as { id: string; status: TaskStatus; due_date: string | null; cost: number | null }[]
-    },
-  })
+  const { data: tasks } = useTurnoverTasks(id!)
+
+  const setStage = useSetTurnoverStage()
 
   const [moveOut, setMoveOut] = useState('')
   const [targetReady, setTargetReady] = useState('')
@@ -130,158 +68,275 @@ export default function TurnoverDetail() {
     }
   }, [turnover])
 
-  const setStage = useMutation({
-    mutationFn: async (stage: TurnoverStage) => {
-      const patch: Record<string, unknown> = { stage }
-      if (stage === 'leased') {
-        patch.leased_date = todayISO()
-        patch.completed_at = new Date().toISOString()
-      }
-      const { error } = await supabase.from('turnovers').update(patch).eq('id', id!)
-      if (error) throw error
-      if (stage === 'leased' && turnover) {
-        await supabase.from('units').update({ status: 'occupied' }).eq('id', turnover.unit.id)
-      }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['turnover', id] })
-      qc.invalidateQueries({ queryKey: ['properties', user!.id] })
-    },
-  })
-
   const saveDetails = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
         .from('turnovers')
-        .update({
-          move_out_date: moveOut || null,
-          target_ready_date: targetReady || null,
-          notes,
-        })
+        .update({ move_out_date: moveOut || null, target_ready_date: targetReady || null, notes })
         .eq('id', id!)
       if (error) throw error
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['turnover', id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['turnover', id] })
+      qc.invalidateQueries({ queryKey: ['all_turnovers', user!.id] })
+      toast('Turnover updated')
+    },
+    onError: () => toast('Could not save those details', 'error'),
   })
 
   if (isLoading || !turnover) {
     return (
-      <div className="max-w-5xl">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="mt-4 h-8 w-64" />
-        <div className="mt-6 grid gap-8 md:grid-cols-[13rem_1fr]">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-72 w-full" />
-        </div>
+      <div className="space-y-6">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-64 w-full" />
       </div>
     )
   }
 
   const today = todayISO()
+  const health = turnoverHealth(turnover)
+  const done = tasks?.filter((t) => t.status === 'done').length ?? 0
+  const total = tasks?.length ?? 0
+  const overdue = tasks?.filter((t) => t.status !== 'done' && t.due_date && t.due_date < today).length ?? 0
+  const cost = tasks?.reduce((sum, t) => sum + (t.cost ?? 0), 0) ?? 0
 
-  let progress: { label: string; overTarget: boolean } | null = null
-  if (turnover.stage !== 'leased' && turnover.move_out_date) {
-    const dayNum = daysBetween(turnover.move_out_date, today)
-    if (dayNum < 0) {
-      progress = { label: `Move-out in ${-dayNum} day${-dayNum === 1 ? '' : 's'}`, overTarget: false }
-    } else {
-      const targetDays = turnover.target_ready_date ? daysBetween(turnover.move_out_date, turnover.target_ready_date) : null
-      const overTarget = targetDays !== null && dayNum > targetDays
-      progress = {
-        label: `Day ${dayNum} since move-out` + (targetDays !== null ? ` · target ${targetDays}` : ''),
-        overTarget,
+  const move = (stage: TurnoverStage) =>
+    setStage.mutate(
+      { turnoverId: turnover.id, unitId: turnover.unit.id, stage },
+      {
+        onSuccess: () => toast(`Moved to ${stageLabels[stage].toLowerCase()}`),
+        onError: () => toast('Could not change the stage', 'error'),
       }
-    }
-  }
-
-  const doneCount = tasks?.filter((t) => t.status === 'done').length ?? 0
-  const totalTasks = tasks?.length ?? 0
-  const overdueCount = tasks?.filter((t) => t.status !== 'done' && t.due_date && t.due_date < today).length ?? 0
-  const totalCost = tasks?.reduce((sum, t) => sum + (t.cost ?? 0), 0) ?? 0
-  const daysLeft = turnover.stage !== 'leased' && turnover.target_ready_date ? daysBetween(today, turnover.target_ready_date) : null
+    )
 
   return (
-    <div className="max-w-5xl">
-      <Link to="/app" className="inline-flex items-center gap-1.5 text-sm text-ink-soft transition-colors hover:text-ink">
-        <ArrowLeft size={14} weight="regular" /> Properties
+    <div className="space-y-6">
+      <Link to="/app/turnovers" className="inline-flex items-center gap-1.5 text-[12px] text-ink-soft transition-colors hover:text-ink">
+        <ArrowLeft size={13} /> Turnovers
       </Link>
 
-      <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-3xl font-medium tracking-tight text-ink">
-          {turnover.unit.property.name} &middot; {turnover.unit.unit_label}
-        </h1>
-        {progress && (
-          <span className={`text-sm ${progress.overTarget ? 'font-medium text-critical-600' : 'text-ink-faint'}`}>
-            {progress.label}
-          </span>
-        )}
-      </div>
+      {/* Photo header: the unit as an object, not a text heading. */}
+      <header className="relative overflow-hidden rounded-lg bg-shell">
+        <img src={unitPhoto(turnover.unit.id, 1600, 500)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-shell/25" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-t from-shell via-shell/70 to-transparent" aria-hidden="true" />
+        <div className="relative flex flex-col justify-end gap-4 p-5 pt-36 sm:p-6 sm:pt-44">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[12px] text-white/70">{turnover.unit.property.name}</p>
+              <h1 className="mt-0.5 truncate text-[1.5rem] font-semibold tracking-[-0.02em] text-white">
+                {turnover.unit.unit_label}
+              </h1>
+              <p
+                className={`mt-1.5 text-[12px] font-medium ${
+                  health.pastTarget ? 'text-critical-200' : 'text-white/80'
+                }`}
+              >
+                {health.headline}
+                {turnover.unit.monthly_rent ? ` · ${formatMoney(turnover.unit.monthly_rent)}/mo` : ''}
+              </p>
+            </div>
 
-      <div className="mt-6 grid gap-6 md:grid-cols-[13rem_1fr] md:gap-8">
-        <div className="md:sticky md:top-20 md:self-start">
-          <StageRail currentStage={turnover.stage} onSelect={(s) => setStage.mutate(s)} disabled={setStage.isPending} />
+            <dl className="flex shrink-0 gap-6">
+              <div>
+                <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">Tasks</dt>
+                <dd className="mt-0.5 text-[18px] font-semibold tabular-nums text-white">
+                  {done}/{total}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">Overdue</dt>
+                <dd className={`mt-0.5 text-[18px] font-semibold tabular-nums ${overdue > 0 ? 'text-critical-200' : 'text-white'}`}>
+                  {overdue}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">Cost</dt>
+                <dd className="mt-0.5 text-[18px] font-semibold tabular-nums text-white">{formatMoney(cost)}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="w-full">
+            <Progress value={done} total={total} tone={health.pastTarget ? 'critical' : 'brand'} />
+          </div>
         </div>
+      </header>
 
-        <div className="min-w-0 space-y-6">
-          {totalTasks > 0 && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatCard label="Days left" value={daysLeft === null ? 'N/A' : daysLeft} accent={daysLeft !== null && daysLeft < 0 ? 'danger' : 'ink'} />
-              <StatCard label="Tasks done" value={`${doneCount}/${totalTasks}`} accent="ink" />
-              <StatCard label="Overdue" value={overdueCount} accent={overdueCount > 0 ? 'danger' : 'ink'} />
-              <StatCard label="Cost" value={formatMoney(totalCost)} accent="ink" icon={CurrencyDollar} />
-            </div>
-          )}
+      <StageStepper current={turnover.stage} onSelect={move} disabled={setStage.isPending} />
 
-          <div className="panel grid gap-5 p-6 sm:grid-cols-3">
+      <Tabs<TabId>
+        tabs={[
+          { id: 'overview', label: 'Overview' },
+          { id: 'timeline', label: 'Timeline' },
+          { id: 'tasks', label: 'Tasks', count: total },
+          { id: 'listing', label: 'Listing' },
+        ]}
+        active={tab}
+        onChange={setTab}
+      />
+
+      {tab === 'overview' && (
+        <div className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
+          <section className="min-w-0 space-y-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Notice given</p>
-              <p className="mt-1.5 text-sm text-ink">{formatDate(turnover.notice_date)}</p>
+              <h2 className="ws-section">Key dates</h2>
+              <p className="ws-meta mt-0.5">The whole checklist is scheduled from the move-out date.</p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-3">
+                <div>
+                  <p className="ws-label">Notice given</p>
+                  <p className="mt-1.5 text-[13px] tabular-nums text-ink">{formatDate(turnover.notice_date)}</p>
+                </div>
+                <div>
+                  <label className="ws-label" htmlFor="move-out">
+                    Move-out
+                  </label>
+                  <input
+                    id="move-out"
+                    type="date"
+                    className="input mt-1.5"
+                    value={moveOut}
+                    onChange={(e) => setMoveOut(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="ws-label" htmlFor="target-ready">
+                    Target ready
+                  </label>
+                  <input
+                    id="target-ready"
+                    type="date"
+                    className="input mt-1.5"
+                    value={targetReady}
+                    onChange={(e) => setTargetReady(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
+
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Move-out date</label>
-              <input type="date" className="field-input mt-1.5" value={moveOut} onChange={(e) => setMoveOut(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Target ready</label>
-              <input
-                type="date"
-                className="field-input mt-1.5"
-                value={targetReady}
-                onChange={(e) => setTargetReady(e.target.value)}
+              <label className="ws-section" htmlFor="notes">
+                Notes
+              </label>
+              <textarea
+                id="notes"
+                className="input mt-3 min-h-32 resize-y"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="What the plumber said, where the keys are, anything worth remembering."
               />
             </div>
-          </div>
 
-          <div className="panel p-6">
-            <label className="field-label">Notes</label>
-            <textarea
-              className="field-input min-h-28 resize-y"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Anything worth remembering about this turnover."
-            />
-            <div className="mt-3 flex items-center gap-3">
-              <button className="btn-primary" onClick={() => saveDetails.mutate()} disabled={saveDetails.isPending}>
-                {saveDetails.isPending ? 'Saving…' : 'Save'}
+            <div className="flex items-center gap-3">
+              <button className="btn-primary btn-sm" onClick={() => saveDetails.mutate()} disabled={saveDetails.isPending}>
+                {saveDetails.isPending ? 'Saving…' : 'Save changes'}
               </button>
-              {saveDetails.isSuccess && (
-                <span className="flex items-center gap-1 text-sm font-medium text-positive-600">
-                  <Check size={15} weight="bold" /> Saved
-                </span>
-              )}
               {saveDetails.isError && (
-                <span className="flex items-center gap-1 text-sm font-medium text-critical-600">
-                  <WarningCircle size={15} weight="fill" /> Could not save. Try again.
+                <span className="flex items-center gap-1 text-[12px] font-medium text-critical-600">
+                  <WarningCircle size={14} weight="fill" /> Could not save
                 </span>
               )}
             </div>
-          </div>
+          </section>
 
-          <Timeline turnoverId={turnover.id} moveOutDate={turnover.move_out_date} />
-          <Tasks turnoverId={turnover.id} landlordId={user!.id} />
-          <ListingPanel turnoverId={turnover.id} landlordId={user!.id} />
+          <aside className="space-y-5 rounded border border-line bg-surface p-5">
+            <div>
+              <p className="ws-label">Current stage</p>
+              <p className="mt-1.5 text-[15px] font-semibold text-ink">{stageLabels[turnover.stage]}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-ink-soft">{stageBlurb[turnover.stage]}</p>
+            </div>
+
+            <div className="border-t border-line pt-4">
+              <p className="ws-label">Checklist</p>
+              <div className="mt-2">
+                <Progress value={done} total={total} tone={health.pastTarget ? 'critical' : 'brand'} />
+              </div>
+              <p className="mt-2 text-[12px] text-ink-soft">
+                {done} of {total} closed
+                {overdue > 0 && <span className="text-critical-600"> · {overdue} overdue</span>}
+              </p>
+              <button onClick={() => setTab('tasks')} className="mt-2.5 text-[12px] ws-link">
+                Open the checklist
+              </button>
+            </div>
+
+            <div className="border-t border-line pt-4">
+              <p className="ws-label">Tracked cost</p>
+              <p className="mt-1.5 text-metric font-semibold tabular-nums text-ink">{formatMoney(cost)}</p>
+              <p className="mt-0.5 text-[12px] text-ink-faint">Repairs, cleaning and vendor invoices on this turnover.</p>
+            </div>
+          </aside>
         </div>
-      </div>
+      )}
+
+      {tab === 'timeline' && <Timeline turnoverId={turnover.id} moveOutDate={turnover.move_out_date} />}
+      {tab === 'tasks' && <Tasks turnoverId={turnover.id} landlordId={user!.id} />}
+      {tab === 'listing' && (
+        <ListingPanel
+          turnoverId={turnover.id}
+          landlordId={user!.id}
+          unitId={turnover.unit.id}
+          unitLabel={turnover.unit.unit_label}
+          propertyName={turnover.unit.property.name}
+        />
+      )}
     </div>
+  )
+}
+
+function StageStepper({
+  current,
+  onSelect,
+  disabled,
+}: {
+  current: TurnoverStage
+  onSelect: (stage: TurnoverStage) => void
+  disabled: boolean
+}) {
+  const currentIndex = stageIndex(current)
+
+  return (
+    <nav aria-label="Turnover stage" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <ol className="flex min-w-[640px] items-center">
+        {STAGES.map((stage, i) => {
+          const isCurrent = i === currentIndex
+          const isDone = i < currentIndex
+          return (
+            <li key={stage} className="flex flex-1 items-center">
+              <button
+                onClick={() => onSelect(stage)}
+                disabled={disabled}
+                aria-current={isCurrent ? 'step' : undefined}
+                className="group flex shrink-0 items-center gap-2 disabled:opacity-60"
+              >
+                <span
+                  className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${
+                    isDone
+                      ? 'bg-brand-500 text-white'
+                      : isCurrent
+                        ? 'bg-ink text-white'
+                        : 'border border-line-strong bg-surface text-ink-faint group-hover:border-ink-subtle'
+                  }`}
+                >
+                  {isDone ? <Check size={11} weight="bold" /> : i + 1}
+                </span>
+                <span
+                  className={`whitespace-nowrap text-[12px] transition-colors ${
+                    isCurrent ? 'font-semibold text-ink' : isDone ? 'font-medium text-ink-soft' : 'text-ink-faint group-hover:text-ink-soft'
+                  }`}
+                >
+                  {stageLabels[stage]}
+                </span>
+              </button>
+              {i < STAGES.length - 1 && (
+                <span className={`mx-2 h-px flex-1 ${i < currentIndex ? 'bg-brand-500' : 'bg-line'}`} aria-hidden="true" />
+              )}
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
   )
 }

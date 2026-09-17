@@ -1,21 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Check, CheckCircle, Circle, CircleHalf, Plus, WarningCircle } from '@phosphor-icons/react'
+import { CheckCircle, Circle, CircleHalf, Plus } from '@phosphor-icons/react'
 import { supabase } from '@/lib/supabase'
-import { formatDate, formatMoney } from '@/lib/format'
+import { formatDate, formatMoney, todayISO } from '@/lib/format'
 import { categoryLabels } from '@/lib/task-categories'
+import { useTurnoverTasks } from '@/lib/workspace-data'
+import { Modal } from '@/components/ui/Modal'
+import { useToast } from '@/components/ui/Toast'
 import type { TaskCategory, TaskStatus } from '@/lib/database.types'
-
-interface TaskRow {
-  id: string
-  category: TaskCategory
-  title: string
-  status: TaskStatus
-  vendor_id: string | null
-  scheduled_date: string | null
-  due_date: string | null
-  cost: number | null
-}
 
 interface VendorOption {
   id: string
@@ -24,39 +16,24 @@ interface VendorOption {
 
 const categoryOrder: TaskCategory[] = ['prep', 'inspection', 'repair', 'cleaning', 'vendor', 'listing']
 const statusOrder: TaskStatus[] = ['open', 'in_progress', 'done']
-const statusLabel: Record<TaskStatus, string> = {
-  open: 'Open',
-  in_progress: 'In progress',
-  done: 'Done',
-}
 const statusIcon: Record<TaskStatus, typeof Circle> = {
   open: Circle,
   in_progress: CircleHalf,
   done: CheckCircle,
 }
-const statusStyle: Record<TaskStatus, string> = {
-  open: 'border border-line-strong text-ink-soft',
-  in_progress: 'bg-caution-50 text-caution-700',
-  done: 'bg-positive-50 text-positive-700',
+const statusColor: Record<TaskStatus, string> = {
+  open: 'text-ink-subtle hover:text-ink-soft',
+  in_progress: 'text-caution-500',
+  done: 'text-brand-500',
 }
 
 export function Tasks({ turnoverId, landlordId }: { turnoverId: string; landlordId: string }) {
   const qc = useQueryClient()
+  const today = todayISO()
   const [filter, setFilter] = useState<TaskCategory | 'all'>('all')
   const [adding, setAdding] = useState(false)
 
-  const { data: tasks } = useQuery({
-    queryKey: ['turnover_tasks', turnoverId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('turnover_tasks')
-        .select('id, category, title, status, vendor_id, scheduled_date, due_date, cost')
-        .eq('turnover_id', turnoverId)
-        .order('created_at', { ascending: true })
-      if (error) throw error
-      return data as TaskRow[]
-    },
-  })
+  const { data: tasks } = useTurnoverTasks(turnoverId)
 
   const { data: vendors } = useQuery({
     queryKey: ['vendors', landlordId],
@@ -79,7 +56,10 @@ export function Tasks({ turnoverId, landlordId }: { turnoverId: string; landlord
         .eq('id', taskId)
       if (error) throw error
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['turnover_tasks', turnoverId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['turnover_tasks', turnoverId] })
+      qc.invalidateQueries({ queryKey: ['all_tasks'] })
+    },
   })
 
   const sorted = useMemo(() => {
@@ -93,105 +73,125 @@ export function Tasks({ turnoverId, landlordId }: { turnoverId: string; landlord
     })
   }, [tasks])
 
+  const counts = useMemo(() => {
+    const map = new Map<TaskCategory | 'all', number>()
+    map.set('all', sorted.length)
+    for (const task of sorted) map.set(task.category, (map.get(task.category) ?? 0) + 1)
+    return map
+  }, [sorted])
+
   const visible = filter === 'all' ? sorted : sorted.filter((t) => t.category === filter)
 
   return (
-    <div className="panel overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3.5 sm:px-6">
-        <h2 className="text-lg font-medium text-ink">Tasks</h2>
-        <button className="btn-secondary btn-sm" onClick={() => setAdding((v) => !v)}>
-          {adding ? 'Cancel' : (
-            <>
-              <Plus size={14} weight="bold" /> Add task
-            </>
-          )}
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {(['all', ...categoryOrder] as const).map((category) => {
+            const count = counts.get(category) ?? 0
+            if (category !== 'all' && count === 0) return null
+            return (
+              <button
+                key={category}
+                onClick={() => setFilter(category)}
+                className={`rounded px-2.5 py-1 text-[12px] font-medium transition-colors ${
+                  filter === category ? 'bg-ink text-white' : 'text-ink-soft hover:bg-sunken'
+                }`}
+              >
+                {category === 'all' ? 'All' : categoryLabels[category]}
+                <span className={`ml-1.5 tabular-nums ${filter === category ? 'text-white/60' : 'text-ink-faint'}`}>{count}</span>
+              </button>
+            )
+          })}
+        </div>
+        <button className="btn-secondary btn-sm" onClick={() => setAdding(true)}>
+          <Plus size={14} weight="bold" /> Add task
         </button>
       </div>
 
-      <div className="flex gap-1 overflow-x-auto border-b border-line px-4 py-2 sm:px-6">
-        {(['all', ...categoryOrder] as const).map((c) => (
-          <button
-            key={c}
-            onClick={() => setFilter(c)}
-            className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-              filter === c ? 'bg-ink text-white' : 'text-ink-soft hover:bg-sunken'
-            }`}
-          >
-            {c === 'all' ? 'All' : categoryLabels[c]}
-          </button>
-        ))}
-      </div>
-
-      {adding && (
-        <AddTaskForm
-          turnoverId={turnoverId}
-          landlordId={landlordId}
-          defaultCategory={filter === 'all' ? 'prep' : filter}
-          vendors={vendors ?? []}
-          onDone={() => setAdding(false)}
-        />
-      )}
-
-      {visible.length === 0 && !adding && (
-        <p className="px-4 py-8 text-center text-sm text-ink-faint sm:px-6">
-          {filter === 'all' ? 'No tasks yet.' : `No ${categoryLabels[filter].toLowerCase()} tasks yet.`}
+      {visible.length === 0 ? (
+        <p className="py-12 text-center text-[13px] text-ink-faint">
+          {filter === 'all' ? 'No tasks on this turnover yet.' : 'Nothing in this category.'}
         </p>
+      ) : (
+        <div className="mt-4 overflow-x-auto rounded border border-line bg-surface">
+          <table className="w-full min-w-[640px] border-collapse">
+            <thead>
+              <tr className="border-b border-line">
+                <th className="tbl-head w-10 px-3 py-2.5" aria-label="Status" />
+                <th className="tbl-head px-3 py-2.5 text-left">Task</th>
+                <th className="tbl-head px-3 py-2.5 text-left">Category</th>
+                <th className="tbl-head px-3 py-2.5 text-left">Vendor</th>
+                <th className="tbl-head px-3 py-2.5 text-left">Due</th>
+                <th className="tbl-head px-3 py-2.5 text-right">Cost</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {visible.map((task) => {
+                const vendor = vendors?.find((v) => v.id === task.vendor_id)
+                const next = statusOrder[(statusOrder.indexOf(task.status) + 1) % 3]
+                const Icon = statusIcon[task.status]
+                const isLate = task.status !== 'done' && task.due_date && task.due_date < today
+                return (
+                  <tr key={task.id} className="tbl-row">
+                    <td className="px-3 py-2.5">
+                      <button
+                        onClick={() => cycleStatus.mutate({ taskId: task.id, next })}
+                        title={`Mark ${next.replace('_', ' ')}`}
+                        className={`transition-colors ${statusColor[task.status]}`}
+                      >
+                        <Icon size={16} weight={task.status === 'open' ? 'regular' : 'fill'} />
+                      </button>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className={`text-[13px] ${task.status === 'done' ? 'text-ink-faint line-through' : 'text-ink'}`}>
+                        {task.title}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-[12px] text-ink-faint">{categoryLabels[task.category]}</td>
+                    <td className="px-3 py-2.5 text-[12px] text-ink-soft">{vendor?.name ?? '—'}</td>
+                    <td className={`px-3 py-2.5 text-[12px] tabular-nums ${isLate ? 'font-medium text-critical-600' : 'text-ink-soft'}`}>
+                      {task.due_date ? formatDate(task.due_date) : '—'}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-[12px] tabular-nums text-ink-soft">
+                      {task.cost != null ? formatMoney(task.cost) : '—'}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      {visible.length > 0 && (
-        <ul className="divide-y divide-line">
-          {visible.map((task) => {
-            const vendor = vendors?.find((v) => v.id === task.vendor_id)
-            const nextStatus = statusOrder[(statusOrder.indexOf(task.status) + 1) % 3]
-            const StatusIcon = statusIcon[task.status]
-            return (
-              <li key={task.id} className="flex items-center gap-3 px-4 py-3 sm:px-6">
-                <span className="badge-neutral hidden shrink-0 sm:inline-flex">{categoryLabels[task.category]}</span>
-                <div className="min-w-0 flex-1">
-                  <p className={`truncate text-sm font-medium ${task.status === 'done' ? 'text-ink-faint line-through' : 'text-ink'}`}>
-                    {task.title}
-                  </p>
-                  <p className="truncate text-xs text-ink-faint sm:hidden">{categoryLabels[task.category]}</p>
-                  {(vendor || task.due_date || task.cost != null) && (
-                    <p className="truncate text-xs text-ink-faint">
-                      {vendor && <span>{vendor.name}</span>}
-                      {vendor && (task.due_date || task.cost != null) && <span className="mx-1.5">&middot;</span>}
-                      {task.due_date && <span>Due {formatDate(task.due_date)}</span>}
-                      {task.due_date && task.cost != null && <span className="mx-1.5">&middot;</span>}
-                      {task.cost != null && <span className="tabular-nums">{formatMoney(task.cost)}</span>}
-                    </p>
-                  )}
-                </div>
-                <button
-                  className={`badge shrink-0 transition-colors ${statusStyle[task.status]}`}
-                  onClick={() => cycleStatus.mutate({ taskId: task.id, next: nextStatus })}
-                >
-                  <StatusIcon size={12} weight={task.status === 'open' ? 'bold' : 'fill'} />
-                  {statusLabel[task.status]}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      )}
+      <AddTaskModal
+        open={adding}
+        onClose={() => setAdding(false)}
+        turnoverId={turnoverId}
+        landlordId={landlordId}
+        defaultCategory={filter === 'all' ? 'prep' : filter}
+        vendors={vendors ?? []}
+      />
     </div>
   )
 }
 
-function AddTaskForm({
+function AddTaskModal({
+  open,
+  onClose,
   turnoverId,
   landlordId,
   defaultCategory,
   vendors,
-  onDone,
 }: {
+  open: boolean
+  onClose: () => void
   turnoverId: string
   landlordId: string
   defaultCategory: TaskCategory
   vendors: VendorOption[]
-  onDone: () => void
 }) {
   const qc = useQueryClient()
+  const toast = useToast()
   const [category, setCategory] = useState<TaskCategory>(defaultCategory)
   const [title, setTitle] = useState('')
   const [vendorId, setVendorId] = useState('')
@@ -213,37 +213,45 @@ function AddTaskForm({
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['turnover_tasks', turnoverId] })
-      onDone()
+      qc.invalidateQueries({ queryKey: ['all_tasks'] })
+      toast('Task added')
+      setTitle('')
+      setDueDate('')
+      setCost('')
+      setVendorId('')
+      onClose()
     },
+    onError: () => toast('Could not save that task', 'error'),
   })
 
   return (
-    <form
-      className="grid animate-fade-in grid-cols-2 gap-3 border-b border-line bg-canvas px-4 py-4 sm:grid-cols-5 sm:px-6"
-      onSubmit={(e) => {
-        e.preventDefault()
-        mutation.mutate()
-      }}
-    >
-      <div className="col-span-2 sm:col-span-1">
-        <label className="field-label">Category</label>
-        <select className="field-input" value={category} onChange={(e) => setCategory(e.target.value as TaskCategory)}>
-          {categoryOrder.map((c) => (
-            <option key={c} value={c}>
-              {categoryLabels[c]}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="col-span-2 sm:col-span-1">
-        <label className="field-label">Task</label>
-        <input className="field-input" value={title} onChange={(e) => setTitle(e.target.value)} required />
-      </div>
-      {vendors.length > 0 && (
+    <Modal open={open} onClose={onClose} title="Add a task" description="It will show up on the timeline and the schedule.">
+      <form
+        id="add-task"
+        className="grid gap-4 sm:grid-cols-2"
+        onSubmit={(e) => {
+          e.preventDefault()
+          mutation.mutate()
+        }}
+      >
+        <div className="sm:col-span-2">
+          <label className="input-label">Task</label>
+          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
+        </div>
         <div>
-          <label className="field-label">Vendor</label>
-          <select className="field-input" value={vendorId} onChange={(e) => setVendorId(e.target.value)}>
-            <option value="">None</option>
+          <label className="input-label">Category</label>
+          <select className="input" value={category} onChange={(e) => setCategory(e.target.value as TaskCategory)}>
+            {categoryOrder.map((c) => (
+              <option key={c} value={c}>
+                {categoryLabels[c]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="input-label">Vendor</label>
+          <select className="input" value={vendorId} onChange={(e) => setVendorId(e.target.value)} disabled={vendors.length === 0}>
+            <option value="">{vendors.length === 0 ? 'No vendors saved' : 'None'}</option>
             {vendors.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.name}
@@ -251,34 +259,23 @@ function AddTaskForm({
             ))}
           </select>
         </div>
-      )}
-      <div>
-        <label className="field-label">Due date</label>
-        <input type="date" className="field-input" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-      </div>
-      <div>
-        <label className="field-label">Cost</label>
-        <input type="number" min="0" className="field-input" placeholder="$" value={cost} onChange={(e) => setCost(e.target.value)} />
-      </div>
-      {mutation.isError && (
-        <p className="field-error col-span-2 sm:col-span-5">
-          <WarningCircle size={14} weight="fill" /> Could not save that task. Try again.
-        </p>
-      )}
-      <div className="col-span-2 flex items-end gap-3 sm:col-span-5">
-        <button type="submit" className="btn-primary" disabled={mutation.isPending}>
-          {mutation.isPending ? (
-            'Saving…'
-          ) : (
-            <>
-              <Check size={16} weight="bold" /> Add task
-            </>
-          )}
+        <div>
+          <label className="input-label">Due date</label>
+          <input type="date" className="input" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+        </div>
+        <div>
+          <label className="input-label">Cost</label>
+          <input type="number" min="0" className="input" placeholder="$" value={cost} onChange={(e) => setCost(e.target.value)} />
+        </div>
+      </form>
+      <div className="mt-5 flex items-center gap-3">
+        <button type="submit" form="add-task" className="btn-primary btn-sm" disabled={mutation.isPending}>
+          {mutation.isPending ? 'Saving…' : 'Add task'}
         </button>
-        <button type="button" className="btn-ghost" onClick={onDone}>
+        <button type="button" className="btn-ghost btn-sm" onClick={onClose}>
           Cancel
         </button>
       </div>
-    </form>
+    </Modal>
   )
 }

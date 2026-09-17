@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { CheckCircle, Circle, CircleHalf } from '@phosphor-icons/react'
 import { supabase } from '@/lib/supabase'
 import { daysBetween, formatDate, todayISO } from '@/lib/format'
 import { categoryLabels } from '@/lib/task-categories'
@@ -13,10 +14,15 @@ interface TaskRow {
 }
 
 const statusOrder: TaskStatus[] = ['open', 'in_progress', 'done']
+const statusIcon: Record<TaskStatus, typeof Circle> = {
+  open: Circle,
+  in_progress: CircleHalf,
+  done: CheckCircle,
+}
 const statusStyle: Record<TaskStatus, string> = {
-  open: 'border border-ink/15 text-ink-soft',
-  in_progress: 'bg-brand-50 text-brand-700',
-  done: 'bg-ink text-white',
+  open: 'border border-line-strong text-ink-soft',
+  in_progress: 'bg-caution-50 text-caution-700',
+  done: 'bg-positive-50 text-positive-700',
 }
 const statusLabel: Record<TaskStatus, string> = {
   open: 'Open',
@@ -73,9 +79,9 @@ export function Timeline({ turnoverId, moveOutDate }: { turnoverId: string; move
   if (dates.length === 0 && unscheduled.length === 0) return null
 
   return (
-    <div className="card mt-6 p-6">
-      <h3 className="font-medium text-ink">Timeline</h3>
-      <p className="text-sm text-ink-faint">What’s due, day by day.</p>
+    <div className="panel p-6">
+      <h3 className="text-lg font-medium text-ink">Timeline</h3>
+      <p className="text-sm text-ink-faint">What is due, day by day.</p>
 
       <ol className="mt-5 space-y-0">
         {dates.map((date, i) => {
@@ -88,42 +94,34 @@ export function Timeline({ turnoverId, moveOutDate }: { turnoverId: string; move
             <li key={date} className="flex gap-4">
               <div className="flex flex-col items-center">
                 <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded text-xs font-bold ${
-                    isToday
-                      ? 'bg-ink text-white'
-                      : isPast
-                        ? 'bg-brand-50 text-brand-700'
-                        : 'border border-ink/15 text-ink-faint'
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                    isToday ? 'bg-ink text-white' : isPast ? 'bg-ink text-white' : 'border-2 border-line-strong text-ink-faint'
                   }`}
                 >
                   {i + 1}
                 </div>
-                {i < dates.length - 1 && (
-                  <div className="w-px flex-1 bg-line" style={{ minHeight: '1.25rem' }} />
-                )}
+                {i < dates.length - 1 && <div className="w-px flex-1 bg-line" style={{ minHeight: '1.25rem' }} />}
               </div>
               <div className="pb-6">
-                <p className="text-sm font-semibold text-ink">
+                <p className="flex items-center gap-2 text-sm font-semibold text-ink">
                   {offset !== null ? dayLabel(offset) : formatDate(date)}
-                  <span className="ml-2 font-normal text-ink-faint">
-                    {offset !== null ? formatDate(date) : ''}
-                  </span>
-                  {isToday && <span className="tag ml-2 bg-brand-500 text-white">Today</span>}
+                  <span className="font-normal text-ink-faint">{offset !== null ? formatDate(date) : ''}</span>
+                  {isToday && <span className="badge-positive">Today</span>}
                 </p>
                 <ul className="mt-2 space-y-1.5">
                   {dayTasks.map((task) => {
                     const nextStatus = statusOrder[(statusOrder.indexOf(task.status) + 1) % 3]
+                    const StatusIcon = statusIcon[task.status]
                     return (
                       <li key={task.id} className="flex flex-wrap items-center gap-2">
                         <button
-                          className={`tag transition-colors ${statusStyle[task.status]}`}
+                          className={`badge transition-colors ${statusStyle[task.status]}`}
                           onClick={() => cycleStatus.mutate({ taskId: task.id, next: nextStatus })}
                         >
+                          <StatusIcon size={12} weight={task.status === 'open' ? 'bold' : 'fill'} />
                           {statusLabel[task.status]}
                         </button>
-                        <span
-                          className={`text-sm ${task.status === 'done' ? 'text-ink-faint line-through' : 'text-ink'}`}
-                        >
+                        <span className={`text-sm ${task.status === 'done' ? 'text-ink-faint line-through' : 'text-ink'}`}>
                           {task.title}
                         </span>
                         <span className="text-xs text-ink-faint">{categoryLabels[task.category]}</span>
@@ -139,7 +137,7 @@ export function Timeline({ turnoverId, moveOutDate }: { turnoverId: string; move
 
       {unscheduled.length > 0 && (
         <div className="mt-2 border-t border-line pt-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-faint">No date set</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">No date set</p>
           <ul className="mt-2 space-y-1.5">
             {unscheduled.map((task) => (
               <li key={task.id} className="flex items-center gap-2 text-sm text-ink-soft">

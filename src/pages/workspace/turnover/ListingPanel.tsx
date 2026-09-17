@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Check, House, WarningCircle } from '@phosphor-icons/react'
 import { supabase } from '@/lib/supabase'
 import type { ListingStatus } from '@/lib/database.types'
 
@@ -12,9 +13,9 @@ interface ListingRow {
 }
 
 const statusStyle: Record<ListingStatus, string> = {
-  draft: 'border border-ink/15 text-ink-soft',
-  published: 'bg-brand-50 text-brand-700',
-  leased: 'bg-ink text-white',
+  draft: 'badge-neutral',
+  published: 'badge-positive',
+  leased: 'badge-ink',
 }
 
 export function ListingPanel({ turnoverId, landlordId }: { turnoverId: string; landlordId: string }) {
@@ -88,19 +89,16 @@ export function ListingPanel({ turnoverId, landlordId }: { turnoverId: string; l
   if (isLoading) return null
 
   return (
-    <div className="card mt-6 p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="font-medium text-ink">Listing</h3>
-          <p className="text-sm text-ink-faint">
-            Draft it while the unit is being turned so it’s ready to publish.
-          </p>
+    <div className="panel p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-2.5">
+          <House size={18} weight="regular" className="mt-0.5 text-ink" />
+          <div>
+            <h3 className="text-lg font-medium text-ink">Listing</h3>
+            <p className="text-sm text-ink-faint">Draft it while the unit is being turned so it is ready to publish.</p>
+          </div>
         </div>
-        {listing && (
-          <span className={`tag shrink-0 ${statusStyle[listing.status]}`}>
-            {listing.status[0].toUpperCase() + listing.status.slice(1)}
-          </span>
-        )}
+        {listing && <span className={`shrink-0 ${statusStyle[listing.status]}`}>{listing.status[0].toUpperCase() + listing.status.slice(1)}</span>}
       </div>
 
       <form
@@ -121,11 +119,7 @@ export function ListingPanel({ turnoverId, landlordId }: { turnoverId: string; l
         </div>
         <div>
           <label className="field-label">Description</label>
-          <textarea
-            className="field-input min-h-28 resize-y"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
+          <textarea className="field-input min-h-28 resize-y" value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
         <div className="max-w-xs">
           <label className="field-label">Asking rent</label>
@@ -139,38 +133,24 @@ export function ListingPanel({ turnoverId, landlordId }: { turnoverId: string; l
           />
         </div>
 
+        {(create.isError || save.isError) && (
+          <p className="field-error">
+            <WarningCircle size={14} weight="fill" /> Could not save the listing. Try again.
+          </p>
+        )}
+
         <div className="flex flex-wrap items-center gap-3 pt-1">
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={create.isPending || save.isPending}
-          >
-            {listing
-              ? save.isPending
-                ? 'Saving…'
-                : 'Save listing'
-              : create.isPending
-                ? 'Creating…'
-                : 'Create listing'}
+          <button type="submit" className="btn-primary" disabled={create.isPending || save.isPending}>
+            {listing ? (save.isPending ? 'Saving…' : 'Save listing') : create.isPending ? 'Creating…' : 'Create listing'}
           </button>
 
           {listing?.status === 'draft' && (
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => setStatus.mutate('published')}
-              disabled={setStatus.isPending}
-            >
-              Publish
+            <button type="button" className="btn-secondary" onClick={() => setStatus.mutate('published')} disabled={setStatus.isPending}>
+              <Check size={16} weight="bold" /> Publish
             </button>
           )}
           {listing?.status === 'published' && (
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={() => setStatus.mutate('draft')}
-              disabled={setStatus.isPending}
-            >
+            <button type="button" className="btn-ghost" onClick={() => setStatus.mutate('draft')} disabled={setStatus.isPending}>
               Unpublish
             </button>
           )}

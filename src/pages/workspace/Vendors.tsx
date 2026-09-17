@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { MapPin, Phone, Plus, Wrench, EnvelopeSimple, WarningCircle } from '@phosphor-icons/react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
+import { EmptyState } from '@/components/EmptyState'
+import { SkeletonPanel } from '@/components/Skeleton'
 import { NearbyVendorSearch } from './NearbyVendorSearch'
 
 interface VendorRow {
@@ -32,14 +35,12 @@ export default function Vendors() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Vendors</h1>
-          <p className="mt-1 text-sm text-ink-soft">
-            The contractors and cleaners you assign work to during a turnover.
-          </p>
+          <h1 className="text-3xl font-medium tracking-tight text-ink">Vendors</h1>
+          <p className="mt-1 text-sm text-ink-soft">The contractors and cleaners you assign work to during a turnover.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex shrink-0 gap-3">
           <button
             className="btn-secondary"
             onClick={() => {
@@ -47,6 +48,7 @@ export default function Vendors() {
               setAdding(false)
             }}
           >
+            <MapPin size={16} weight="bold" />
             Find nearby
           </button>
           <button
@@ -56,6 +58,7 @@ export default function Vendors() {
               setSearching(false)
             }}
           >
+            <Plus size={16} weight="bold" />
             Add vendor
           </button>
         </div>
@@ -66,32 +69,41 @@ export default function Vendors() {
       {adding && <AddVendorForm landlordId={user!.id} onDone={() => setAdding(false)} />}
 
       <div className="mt-8">
-        {isLoading && <p className="text-sm text-ink-faint">Loading…</p>}
+        {isLoading && <SkeletonPanel rows={4} columns={2} />}
 
         {!isLoading && vendors?.length === 0 && !adding && (
-          <div className="card flex flex-col items-start gap-3 p-10">
-            <p className="font-medium text-ink">No vendors yet</p>
-            <p className="text-sm text-ink-soft">
-              Add the people you actually call for repairs, cleaning, and inspections.
-            </p>
-            <button className="btn-primary mt-1" onClick={() => setAdding(true)}>
-              Add vendor
-            </button>
-          </div>
+          <EmptyState
+            icon={Wrench}
+            title="No vendors yet"
+            body="Add the people you actually call for repairs, cleaning, and inspections."
+            action={
+              <button className="btn-primary mt-1" onClick={() => setAdding(true)}>
+                <Plus size={16} weight="bold" />
+                Add vendor
+              </button>
+            }
+          />
         )}
 
         {vendors && vendors.length > 0 && (
-          <div className="card divide-y divide-line">
+          <div className="panel divide-y divide-line">
             {vendors.map((v) => (
-              <div key={v.id} className="flex flex-wrap items-center justify-between gap-2 px-6 py-4">
+              <div key={v.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 sm:px-6">
                 <div>
                   <p className="font-medium text-ink">{v.name}</p>
                   <p className="text-sm text-ink-faint">{v.trade || 'General'}</p>
                 </div>
-                <div className="text-sm text-ink-soft">
-                  {v.phone && <span>{v.phone}</span>}
-                  {v.phone && v.email && <span className="mx-2 text-line">&middot;</span>}
-                  {v.email && <span>{v.email}</span>}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-soft">
+                  {v.phone && (
+                    <span className="flex items-center gap-1.5">
+                      <Phone size={14} weight="bold" className="text-ink-faint" /> {v.phone}
+                    </span>
+                  )}
+                  {v.email && (
+                    <span className="flex items-center gap-1.5">
+                      <EnvelopeSimple size={14} weight="bold" className="text-ink-faint" /> {v.email}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
@@ -128,7 +140,7 @@ function AddVendorForm({ landlordId, onDone }: { landlordId: string; onDone: () 
 
   return (
     <form
-      className="card mt-6 grid gap-4 p-6 sm:grid-cols-2"
+      className="panel mt-6 grid animate-fade-in gap-4 p-6 sm:grid-cols-2"
       onSubmit={(e) => {
         e.preventDefault()
         mutation.mutate()
@@ -153,15 +165,12 @@ function AddVendorForm({ landlordId, onDone }: { landlordId: string; onDone: () 
       </div>
       <div>
         <label className="field-label">Email</label>
-        <input
-          type="email"
-          className="field-input"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <input type="email" className="field-input" value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       {mutation.isError && (
-        <p className="sm:col-span-2 text-sm text-red-600">Couldn’t save that vendor. Try again.</p>
+        <p className="field-error sm:col-span-2">
+          <WarningCircle size={14} weight="fill" /> Could not save that vendor. Try again.
+        </p>
       )}
       <div className="flex gap-3 sm:col-span-2">
         <button type="submit" className="btn-primary" disabled={mutation.isPending}>

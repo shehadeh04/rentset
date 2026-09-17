@@ -1,5 +1,5 @@
 export function formatDate(value: string | null | undefined) {
-  if (!value) return '—'
+  if (!value) return 'Not set'
   return new Date(value + 'T00:00:00').toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -8,7 +8,7 @@ export function formatDate(value: string | null | undefined) {
 }
 
 export function formatMoney(value: number | null | undefined) {
-  if (value === null || value === undefined) return '—'
+  if (value === null || value === undefined) return 'N/A'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',

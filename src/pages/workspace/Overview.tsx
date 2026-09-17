@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Buildings, CalendarBlank, ClockCountdown, Plus, WarningCircle } from '@phosphor-icons/react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { addDays, daysBetween, daysSince, formatMoney, todayISO } from '@/lib/format'
 import { buildTemplateTasks } from '@/lib/checklist-template'
 import { StatCard } from '@/components/StatCard'
+import { EmptyState } from '@/components/EmptyState'
+import { SkeletonPanel, SkeletonStatRow } from '@/components/Skeleton'
 import type { TaskCategory, TaskStatus, TurnoverStage, UnitStatus } from '@/lib/database.types'
 
 interface UnitRow {
@@ -61,12 +64,6 @@ const stageLabels: Record<TurnoverStage, string> = {
   cleaning: 'Cleaning',
   listing: 'Listing',
   leased: 'Leased',
-}
-
-const statusStyles: Record<UnitStatus, string> = {
-  occupied: 'border border-ink/15 text-ink-soft',
-  vacant: 'border border-ink/15 text-ink-soft',
-  turnover: 'bg-brand-50 text-brand-700',
 }
 
 const ROW_GRID = 'grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 sm:grid-cols-[2fr_1fr_1fr_auto]'
@@ -176,40 +173,49 @@ export default function Overview() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Properties</h1>
+          <h1 className="text-3xl font-medium tracking-tight text-ink">Properties</h1>
           <p className="mt-1 text-sm text-ink-soft">
             {properties && properties.length > 0
               ? `${properties.length} propert${properties.length === 1 ? 'y' : 'ies'} · ${totalUnits} unit${totalUnits === 1 ? '' : 's'}`
               : 'Every property and unit you manage, and where each one stands.'}
           </p>
         </div>
-        <button className="btn-primary" onClick={() => setAddingProperty((v) => !v)}>
+        <button className="btn-primary shrink-0" onClick={() => setAddingProperty((v) => !v)}>
+          <Plus size={16} weight="bold" />
           Add property
         </button>
       </div>
 
+      {isLoading && (
+        <div className="mt-6">
+          <SkeletonStatRow />
+        </div>
+      )}
+
       {!isLoading && properties && properties.length > 0 && (
         <>
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard label="Active turnovers" value={stats.activeCount} accent="ink" />
-            <StatCard label="Avg. turnover days" value={stats.avgDays ?? '—'} accent="ink" />
+            <StatCard label="Active turnovers" value={stats.activeCount} icon={Buildings} />
+            <StatCard label="Avg. days" value={stats.avgDays ?? 'N/A'} icon={CalendarBlank} />
             <StatCard
               label="Tasks due today"
               value={stats.dueToday}
-              accent={stats.dueToday > 0 ? 'amber' : 'ink'}
+              accent={stats.dueToday > 0 ? 'gold' : 'ink'}
+              icon={ClockCountdown}
             />
             <StatCard
               label="Overdue tasks"
               value={stats.overdue.length}
-              accent={stats.overdue.length > 0 ? 'red' : 'ink'}
+              accent={stats.overdue.length > 0 ? 'danger' : 'ink'}
+              icon={WarningCircle}
             />
           </div>
 
           {stats.totalCost > 0 && (
             <p className="mt-3 text-sm text-ink-soft">
-              <span className="font-semibold text-ink">{formatMoney(stats.totalCost)}</span> in tracked
+              <span className="font-semibold tabular-nums text-ink">{formatMoney(stats.totalCost)}</span> in tracked
               repair &amp; vendor costs across all turnovers.
             </p>
           )}
@@ -219,22 +225,25 @@ export default function Overview() {
               {alerts.map((alert) => (
                 <div
                   key={alert.id}
-                  className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 ${
-                    alert.severity === 'red'
-                      ? 'border-red-200 bg-red-50'
-                      : 'border-brand-200 bg-brand-50'
+                  className={`flex flex-wrap items-center justify-between gap-3 rounded-sm border px-4 py-3 ${
+                    alert.severity === 'red' ? 'border-critical-200 bg-critical-50' : 'border-caution-300 bg-caution-50'
                   }`}
                 >
-                  <p className={`text-sm font-medium ${alert.severity === 'red' ? 'text-red-800' : 'text-brand-800'}`}>
+                  <p
+                    className={`flex items-center gap-2 text-sm font-medium ${
+                      alert.severity === 'red' ? 'text-critical-800' : 'text-caution-700'
+                    }`}
+                  >
+                    <WarningCircle size={16} weight="fill" className="shrink-0" />
                     {alert.message}
                   </p>
                   <Link
                     to={`/app/turnovers/${alert.turnoverId}`}
-                    className={`shrink-0 text-sm font-semibold hover:underline ${
-                      alert.severity === 'red' ? 'text-red-700' : 'text-brand-700'
+                    className={`flex shrink-0 items-center gap-1 text-sm font-semibold hover:underline ${
+                      alert.severity === 'red' ? 'text-critical-700' : 'text-caution-700'
                     }`}
                   >
-                    View turnover &rarr;
+                    View turnover <ArrowRight size={14} weight="bold" />
                   </Link>
                 </div>
               ))}
@@ -243,31 +252,31 @@ export default function Overview() {
         </>
       )}
 
-      {addingProperty && (
-        <AddPropertyForm landlordId={user!.id} onDone={() => setAddingProperty(false)} />
-      )}
+      {addingProperty && <AddPropertyForm landlordId={user!.id} onDone={() => setAddingProperty(false)} />}
 
       <div className="mt-8">
-        {isLoading && <p className="text-sm text-ink-faint">Loading&hellip;</p>}
+        {isLoading && <SkeletonPanel rows={5} columns={3} />}
 
         {!isLoading && properties?.length === 0 && !addingProperty && (
-          <div className="card flex flex-col items-start gap-3 p-10">
-            <p className="font-semibold text-ink">No properties yet</p>
-            <p className="text-sm text-ink-soft">
-              Add your first property to start tracking its units and turnovers.
-            </p>
-            <button className="btn-primary mt-1" onClick={() => setAddingProperty(true)}>
-              Add property
-            </button>
-          </div>
+          <EmptyState
+            icon={Buildings}
+            title="No properties yet"
+            body="Add your first property to start tracking its units and turnovers."
+            action={
+              <button className="btn-primary mt-1" onClick={() => setAddingProperty(true)}>
+                <Plus size={16} weight="bold" />
+                Add property
+              </button>
+            }
+          />
         )}
 
         {properties && properties.length > 0 && (
-          <div className="card overflow-hidden">
-            <div className={`${ROW_GRID} border-b border-ink/10 px-4 py-2 sm:px-6`}>
-              <p className="tag text-ink-faint">Unit</p>
-              <p className="tag hidden text-ink-faint sm:block">Rent</p>
-              <p className="tag text-ink-faint">Status</p>
+          <div className="panel overflow-hidden">
+            <div className={`${ROW_GRID} border-b border-line bg-sunken/60 px-4 py-2.5 sm:px-6`}>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Unit</p>
+              <p className="hidden text-[11px] font-semibold uppercase tracking-wide text-ink-faint sm:block">Rent</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">Status</p>
               <p />
             </div>
             {properties.map((property) => (
@@ -308,7 +317,7 @@ function AddPropertyForm({ landlordId, onDone }: { landlordId: string; onDone: (
 
   return (
     <form
-      className="card mt-6 grid gap-4 p-6 sm:grid-cols-2"
+      className="panel mt-6 grid animate-fade-in gap-4 p-6 sm:grid-cols-2"
       onSubmit={(e) => {
         e.preventDefault()
         mutation.mutate()
@@ -348,7 +357,9 @@ function AddPropertyForm({ landlordId, onDone }: { landlordId: string; onDone: (
         </div>
       </div>
       {mutation.isError && (
-        <p className="sm:col-span-2 text-sm text-red-600">Couldn&rsquo;t save that property. Try again.</p>
+        <p className="field-error sm:col-span-2">
+          <WarningCircle size={14} weight="fill" /> Could not save that property. Try again.
+        </p>
       )}
       <div className="flex gap-3 sm:col-span-2">
         <button type="submit" className="btn-primary" disabled={mutation.isPending}>
@@ -366,25 +377,24 @@ function PropertySection({ property, landlordId }: { property: PropertyRow; land
   const [addingUnit, setAddingUnit] = useState(false)
 
   return (
-    <div className="border-b border-ink/10 last:border-b-0">
-      <div className="flex items-start justify-between gap-3 bg-ink/[0.02] px-4 py-3 sm:px-6">
+    <div className="border-b border-line last:border-b-0">
+      <div className="flex flex-wrap items-start justify-between gap-3 bg-sunken/60 px-4 py-3 sm:px-6">
         <div>
           <p className="text-sm font-semibold text-ink">{property.name}</p>
           <p className="text-xs text-ink-faint">
             {property.address_line1}, {property.city}, {property.state}
           </p>
         </div>
-        <button className="btn-ghost shrink-0 py-1 text-xs" onClick={() => setAddingUnit((v) => !v)}>
-          + Add unit
+        <button
+          className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold text-ink-soft transition-colors hover:bg-sunken hover:text-ink"
+          onClick={() => setAddingUnit((v) => !v)}
+        >
+          <Plus size={13} weight="bold" /> Add unit
         </button>
       </div>
 
       {addingUnit && (
-        <AddUnitForm
-          propertyId={property.id}
-          landlordId={landlordId}
-          onDone={() => setAddingUnit(false)}
-        />
+        <AddUnitForm propertyId={property.id} landlordId={landlordId} onDone={() => setAddingUnit(false)} />
       )}
 
       {property.units.length === 0 && !addingUnit && (
@@ -434,7 +444,7 @@ function AddUnitForm({
 
   return (
     <form
-      className="grid grid-cols-2 gap-3 border-b border-ink/10 bg-paper px-4 py-4 sm:grid-cols-4 sm:px-6"
+      className="grid animate-fade-in grid-cols-2 gap-3 border-b border-line bg-canvas px-4 py-4 sm:grid-cols-4 sm:px-6"
       onSubmit={(e) => {
         e.preventDefault()
         mutation.mutate()
@@ -504,7 +514,7 @@ function UnitRowItem({ unit, landlordId }: { unit: UnitRow; landlordId: string }
     mutationFn: async () => {
       const noticeDate = todayISO()
       // 30 days is the standard PA lease notice period, and 9 days is the
-      // research-backed standard-path turnover length — both are editable
+      // research-backed standard-path turnover length; both are editable
       // starting estimates, not fixed rules.
       const moveOutDate = addDays(noticeDate, 30)
       const targetReadyDate = addDays(moveOutDate, 9)
@@ -538,38 +548,36 @@ function UnitRowItem({ unit, landlordId }: { unit: UnitRow; landlordId: string }
   })
 
   return (
-    <div className={`${ROW_GRID} border-b border-ink/10 px-4 py-3 last:border-b-0 sm:px-6`}>
+    <div className={`${ROW_GRID} border-b border-line px-4 py-3 last:border-b-0 sm:px-6`}>
       <div className="min-w-0">
         <p className="text-sm font-semibold text-ink">{unit.unit_label}</p>
         <p className="text-xs text-ink-faint">
           {unit.bedrooms} bd &middot; {unit.bathrooms} ba
         </p>
       </div>
-      <p className="hidden text-sm text-ink-soft sm:block">
-        {unit.monthly_rent ? `${formatMoney(unit.monthly_rent)}/mo` : '—'}
+      <p className="hidden text-sm tabular-nums text-ink-soft sm:block">
+        {unit.monthly_rent ? `${formatMoney(unit.monthly_rent)}/mo` : 'No rent set'}
       </p>
       <div>
-        <span className={`tag ${statusStyles[unit.status]}`}>
+        <span className={unit.status === 'turnover' ? 'badge-positive' : 'badge-neutral'}>
           {unit.status === 'turnover' && openTurnover
             ? stageLabels[openTurnover.stage]
             : unit.status[0].toUpperCase() + unit.status.slice(1)}
         </span>
         {unit.status === 'turnover' && openTurnover && (
-          <span className="ml-1.5 hidden text-xs text-ink-faint sm:inline">
-            {daysSince(openTurnover.notice_date)}d
-          </span>
+          <span className="ml-1.5 hidden text-xs text-ink-faint sm:inline">{daysSince(openTurnover.notice_date)}d</span>
         )}
       </div>
       {openTurnover ? (
         <button
-          className="btn-secondary py-1.5 text-xs sm:text-sm"
+          className="btn-secondary btn-sm"
           onClick={() => navigate(`/app/turnovers/${openTurnover.id}`)}
         >
           View
         </button>
       ) : (
         <button
-          className="btn-secondary py-1.5 text-xs sm:text-sm"
+          className="btn-secondary btn-sm"
           onClick={() => startTurnover.mutate()}
           disabled={startTurnover.isPending}
         >

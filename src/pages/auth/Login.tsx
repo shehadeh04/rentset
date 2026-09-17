@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Logo } from '@/components/Logo'
+import { WarningCircle } from '@phosphor-icons/react'
+import { AuthLayout } from '@/components/auth/AuthLayout'
 import { useAuth } from '@/lib/auth-context'
 import { supabaseConfigured } from '@/lib/supabase'
 
@@ -41,65 +42,70 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-paper px-6 py-12">
-      <Link to="/" className="mb-8">
-        <Logo />
-      </Link>
-      <div className="card w-full max-w-sm p-8">
-        <h1 className="font-display text-xl font-semibold tracking-tight text-ink">Log in</h1>
-        <p className="mt-1 text-sm text-ink-soft">Welcome back.</p>
+    <AuthLayout>
+      <h1 className="text-3xl font-medium tracking-tight text-ink">Log in</h1>
+      <p className="mt-1 text-sm text-ink-soft">Welcome back.</p>
 
-        {!supabaseConfigured && (
-          <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            Accounts aren’t connected yet — this form will work once the database is wired up.
+      {!supabaseConfigured && (
+        <p className="mt-4 rounded-sm bg-caution-50 px-3 py-2.5 text-sm text-caution-700">
+          Accounts are not connected yet. This form will work once the database is wired up.
+        </p>
+      )}
+
+      <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <div>
+          <label className="field-label" htmlFor="email">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            className="field-input"
+            {...register('email')}
+          />
+          {errors.email && (
+            <p className="field-error">
+              <WarningCircle size={14} weight="fill" /> {errors.email.message}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="field-label" htmlFor="password">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            className="field-input"
+            {...register('password')}
+          />
+          {errors.password && (
+            <p className="field-error">
+              <WarningCircle size={14} weight="fill" /> {errors.password.message}
+            </p>
+          )}
+        </div>
+
+        {formError && (
+          <p className="flex items-center gap-1.5 rounded-sm bg-critical-50 px-3 py-2.5 text-sm text-critical-700">
+            <WarningCircle size={15} weight="fill" className="shrink-0" /> {formError}
           </p>
         )}
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <div>
-            <label className="field-label" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              className="field-input"
-              {...register('email')}
-            />
-            {errors.email && <p className="field-error">{errors.email.message}</p>}
-          </div>
+        <button type="submit" className="btn-primary w-full" disabled={submitting}>
+          {submitting ? 'Logging in…' : 'Log in'}
+        </button>
+      </form>
 
-          <div>
-            <label className="field-label" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              className="field-input"
-              {...register('password')}
-            />
-            {errors.password && <p className="field-error">{errors.password.message}</p>}
-          </div>
-
-          {formError && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</p>
-          )}
-
-          <button type="submit" className="btn-primary w-full" disabled={submitting}>
-            {submitting ? 'Logging in…' : 'Log in'}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-ink-soft">
-          Don’t have an account?{' '}
-          <Link to="/signup" className="font-medium text-brand-700 hover:text-brand-800">
-            Sign up
-          </Link>
-        </p>
-      </div>
-    </div>
+      <p className="mt-6 text-center text-sm text-ink-soft">
+        Do not have an account?{' '}
+        <Link to="/signup" className="font-semibold text-positive-600 hover:text-ink">
+          Sign up
+        </Link>
+      </p>
+    </AuthLayout>
   )
 }

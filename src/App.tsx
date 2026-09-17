@@ -1,5 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import Landing from '@/pages/Landing'
+import About from '@/pages/About'
+import Resources from '@/pages/Resources'
 import Login from '@/pages/auth/Login'
 import Signup from '@/pages/auth/Signup'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
@@ -14,6 +16,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/resources" element={<Resources />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 

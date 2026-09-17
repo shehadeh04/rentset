@@ -3,6 +3,9 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { formatDate } from '@/lib/format'
 import { Link } from 'react-router-dom'
+import { CalendarBlank, Check } from '@phosphor-icons/react'
+import { EmptyState } from '@/components/EmptyState'
+import { SkeletonPanel } from '@/components/Skeleton'
 import type { TaskCategory, TaskStatus } from '@/lib/database.types'
 import { categoryLabels } from '@/lib/task-categories'
 
@@ -17,7 +20,6 @@ interface ScheduledTask {
     unit: { unit_label: string; property: { name: string } }
   }
 }
-
 
 function dueGroup(dueDate: string): 'Overdue' | 'This week' | 'Later' {
   const due = new Date(dueDate + 'T00:00:00').getTime()
@@ -66,51 +68,46 @@ export default function Schedule() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">Schedule</h1>
+      <h1 className="text-3xl font-medium tracking-tight text-ink">Schedule</h1>
       <p className="mt-1 text-sm text-ink-soft">Everything with a due date, across every unit.</p>
 
       <div className="mt-8 space-y-8">
-        {isLoading && <p className="text-sm text-ink-faint">Loading…</p>}
+        {isLoading && <SkeletonPanel rows={4} columns={2} />}
 
         {!isLoading && tasks?.length === 0 && (
-          <div className="card p-10">
-            <p className="font-medium text-ink">Nothing scheduled</p>
-            <p className="mt-1 text-sm text-ink-soft">
-              Add due dates to tasks inside a turnover and they’ll show up here.
-            </p>
-          </div>
+          <EmptyState
+            icon={CalendarBlank}
+            title="Nothing scheduled"
+            body="Add due dates to tasks inside a turnover and they will show up here."
+          />
         )}
 
         {(['Overdue', 'This week', 'Later'] as const).map((label) =>
           groups[label].length > 0 ? (
             <div key={label}>
-              <h2
-                className={`text-sm font-medium ${label === 'Overdue' ? 'text-red-600' : 'text-ink-soft'}`}
-              >
+              <h2 className={`text-sm font-semibold ${label === 'Overdue' ? 'text-critical-600' : 'text-ink-soft'}`}>
                 {label}
               </h2>
-              <div className="card mt-3 divide-y divide-line">
+              <div className="panel mt-3 divide-y divide-line">
                 {groups[label].map((task) => (
-                  <div key={task.id} className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-                    <div>
-                      <p className="text-sm font-medium text-ink">{task.title}</p>
-                      <p className="text-xs text-ink-faint">
+                  <div key={task.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 sm:px-6">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-ink">{task.title}</p>
+                      <p className="mt-0.5 truncate text-xs text-ink-faint">
                         {categoryLabels[task.category]} &middot;{' '}
-                        <Link
-                          to={`/app/turnovers/${task.turnover.id}`}
-                          className="hover:text-ink-soft hover:underline"
-                        >
+                        <Link to={`/app/turnovers/${task.turnover.id}`} className="hover:text-ink-soft hover:underline">
                           {task.turnover.unit.property.name} &middot; {task.turnover.unit.unit_label}
                         </Link>
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-ink-faint">{formatDate(task.due_date)}</span>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <span className="text-sm tabular-nums text-ink-faint">{formatDate(task.due_date)}</span>
                       <button
-                        className="btn-secondary py-1.5 text-sm"
+                        className="btn-secondary btn-sm"
                         onClick={() => markDone.mutate(task.id)}
                         disabled={markDone.isPending}
                       >
+                        <Check size={14} weight="bold" />
                         Mark done
                       </button>
                     </div>

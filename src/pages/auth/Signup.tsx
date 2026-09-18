@@ -42,15 +42,14 @@ export default function Signup() {
 
   if (awaitingConfirmation) {
     return (
-      <AuthLayout>
-        <div className="flex h-11 w-11 items-center justify-center rounded-sm bg-positive-50 text-positive-700">
+      <AuthLayout
+        title="Check your email"
+        intro="We sent a confirmation link to finish setting up your account. Once you confirm, come back and log in."
+      >
+        <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-pill bg-positive-50 text-positive-700">
           <EnvelopeSimple size={20} weight="light" />
         </div>
-        <h1 className="mt-4 text-3xl font-medium tracking-tight text-ink">Check your email</h1>
-        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-          We sent a confirmation link to finish setting up your account. Once you confirm, come back and log in.
-        </p>
-        <Link to="/login" className="btn-primary mt-6 w-full">
+        <Link to="/login" className="btn-primary w-full">
           Go to log in
         </Link>
       </AuthLayout>
@@ -58,12 +57,7 @@ export default function Signup() {
   }
 
   return (
-    <AuthLayout>
-      <h1 className="text-3xl font-medium tracking-tight text-ink">Create your account</h1>
-      <p className="mt-1 text-sm text-ink-soft">
-        Free to start, no credit card required.
-      </p>
-
+    <AuthLayout title="Create your account" intro="Free to start, no credit card required.">
       {!supabaseConfigured && (
         <p className="mt-4 rounded-sm bg-caution-50 px-3 py-2.5 text-sm text-caution-700">
           Accounts are not connected yet. This form will work once the database is wired up.

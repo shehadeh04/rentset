@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarBlank, Check, WarningCircle } from '@phosphor-icons/react'
+import { Check } from '@phosphor-icons/react'
 import { useAllTasks, useCompleteTask, type TaskRow } from '@/lib/workspace-data'
 import { addDays, todayISO } from '@/lib/format'
 import { categoryLabels } from '@/lib/task-categories'
+import { marketingImages } from '@/lib/images'
 import { Skeleton } from '@/components/Skeleton'
 
 type Range = 'week' | 'month' | 'all'
@@ -20,10 +21,7 @@ export default function Schedule() {
   const { data: tasks, isLoading } = useAllTasks()
   const completeTask = useCompleteTask()
 
-  const open = useMemo(
-    () => (tasks ?? []).filter((t) => t.status !== 'done' && t.due_date),
-    [tasks]
-  )
+  const open = useMemo(() => (tasks ?? []).filter((t) => t.status !== 'done' && t.due_date), [tasks])
 
   const overdue = useMemo(
     () => open.filter((t) => t.due_date! < today).sort((a, b) => (a.due_date! < b.due_date! ? -1 : 1)),
@@ -44,8 +42,8 @@ export default function Schedule() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-9 w-48" />
+      <div className="space-y-5">
+        <Skeleton className="h-[42svh] w-full" />
         <Skeleton className="h-64 w-full" />
       </div>
     )
@@ -54,23 +52,25 @@ export default function Schedule() {
   const hasAnything = overdue.length > 0 || upcoming.size > 0
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="ws-title">Schedule</h1>
-          <p className="mt-1 text-[13px] text-ink-soft">
+    <div className="space-y-5">
+      <section className="scene relative min-h-[42svh]">
+        <img src={marketingImages.livingRoom.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/45 to-ink/30" aria-hidden="true" />
+        <div className="relative flex min-h-[42svh] flex-col justify-end p-5 sm:p-10">
+          <p className="eyebrow text-white/50">Every due date</p>
+          <h1 className="display-1 mt-4 text-white">Schedule</h1>
+          <p className="lede mt-5 max-w-[44ch] text-white/75">
             {open.length === 0
               ? 'Nothing with a due date is open.'
-              : `${open.length} open task${open.length === 1 ? '' : 's'} with a due date across every unit.`}
+              : `${open.length} open task${open.length === 1 ? '' : 's'} across every unit.`}
           </p>
         </div>
+      </section>
+
+      <div className="flex flex-wrap items-center justify-end gap-3 px-2 py-6 sm:px-5">
         <div className="seg">
           {ranges.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => setRange(option.id)}
-              className={`seg-item ${range === option.id ? 'seg-item-active' : ''}`}
-            >
+            <button key={option.id} onClick={() => setRange(option.id)} className={`seg-item ${range === option.id ? 'seg-item-active' : ''}`}>
               {option.label}
             </button>
           ))}
@@ -78,52 +78,91 @@ export default function Schedule() {
       </div>
 
       {!hasAnything && (
-        <div className="flex flex-col items-center rounded border border-line bg-surface px-6 py-16 text-center">
-          <CalendarBlank size={24} className="text-ink-subtle" />
-          <p className="mt-3 text-[13px] font-medium text-ink">Nothing scheduled</p>
-          <p className="mt-1 max-w-xs text-[12px] text-ink-faint">
+        <section className="scene-navy px-5 py-20 text-center sm:px-10">
+          <h2 className="display-2">Nothing scheduled</h2>
+          <p className="lede mx-auto mt-5 max-w-[40ch] text-white/60">
             Tasks with a due date show up here, grouped by the day they are due.
           </p>
-        </div>
+        </section>
       )}
 
       {overdue.length > 0 && (
-        <section>
-          <h2 className="flex items-center gap-2 text-[13px] font-semibold text-critical-600">
-            <WarningCircle size={15} weight="fill" /> Overdue
-            <span className="font-normal text-ink-faint">{overdue.length}</span>
+        <section className="scene-clay px-5 py-12 sm:px-10 sm:py-16">
+          <p className="eyebrow text-white/45">Overdue</p>
+          <h2 className="display-2 mt-5">
+            {overdue.length} task{overdue.length === 1 ? '' : 's'} late
           </h2>
-          <div className="mt-3 overflow-hidden rounded border border-critical-200">
-            <ul className="divide-y divide-critical-200/60">
-              {overdue.map((task) => (
-                <TaskLine key={task.id} task={task} onComplete={() => completeTask.mutate(task.id)} tone="critical" />
-              ))}
-            </ul>
-          </div>
+          <ul className="mt-10">
+            {overdue.map((task) => (
+              <li key={task.id} className="flex items-center gap-4 border-t border-white/15 py-4">
+                <button
+                  onClick={() => completeTask.mutate(task.id)}
+                  aria-label={`Mark ${task.title} done`}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-pill border border-white/30 text-transparent transition-colors hover:border-white hover:bg-white hover:text-ink"
+                >
+                  <Check size={13} weight="bold" />
+                </button>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[16px] tracking-tight2">{task.title}</span>
+                  <span className="mt-1 block truncate text-[12px] text-white/55">
+                    {categoryLabels[task.category]}
+                    {task.turnover && ` · ${task.turnover.unit.property.name} · ${task.turnover.unit.unit_label}`}
+                  </span>
+                </span>
+                {task.turnover && (
+                  <Link to={`/app/turnovers/${task.turnover.id}`} className="btn-glass btn-sm shrink-0">
+                    Open
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
       {upcoming.size > 0 && (
-        <section className="space-y-0">
+        <section className="px-2 pb-12 sm:px-5">
           {Array.from(upcoming.entries()).map(([date, dayTasks]) => {
             const parsed = new Date(date + 'T00:00:00')
             const isToday = date === today
             return (
-              <div key={date} className="flex gap-4 border-t border-line py-4 first:border-t-0 sm:gap-6">
-                <div className="w-14 shrink-0 sm:w-20">
-                  <p className={`text-[11px] font-semibold uppercase tracking-wide ${isToday ? 'text-ink' : 'text-ink-faint'}`}>
+              <div key={date} className="flex gap-6 border-t border-line py-8 sm:gap-12">
+                <div className="w-20 shrink-0 sm:w-28">
+                  <p className={`text-[11px] uppercase tracking-[0.14em] ${isToday ? 'text-ink' : 'text-ink-faint'}`}>
                     {isToday ? 'Today' : parsed.toLocaleDateString('en-US', { weekday: 'short' })}
                   </p>
-                  <p className={`text-[22px] font-semibold leading-tight tabular-nums ${isToday ? 'text-ink' : 'text-ink-soft'}`}>
+                  <p className="mt-2 text-[clamp(2.25rem,4vw,3.25rem)] leading-none tracking-display tabular-nums">
                     {parsed.getDate()}
                   </p>
-                  <p className="text-[11px] uppercase tracking-wide text-ink-faint">
+                  <p className="mt-2 text-[11px] uppercase tracking-[0.14em] text-ink-faint">
                     {parsed.toLocaleDateString('en-US', { month: 'short' })}
                   </p>
                 </div>
-                <ul className="min-w-0 flex-1 divide-y divide-line">
+                <ul className="min-w-0 flex-1">
                   {dayTasks.map((task) => (
-                    <TaskLine key={task.id} task={task} onComplete={() => completeTask.mutate(task.id)} />
+                    <li key={task.id} className="flex items-center gap-4 border-b border-line py-4 last:border-b-0">
+                      <button
+                        onClick={() => completeTask.mutate(task.id)}
+                        aria-label={`Mark ${task.title} done`}
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-pill border border-line text-transparent transition-colors hover:border-ink hover:bg-ink hover:text-white"
+                      >
+                        <Check size={13} weight="bold" />
+                      </button>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[16px] tracking-tight2">{task.title}</span>
+                        <span className="mt-1 block truncate text-[12px] text-ink-faint">
+                          {categoryLabels[task.category]}
+                          {task.turnover && (
+                            <>
+                              {' · '}
+                              <Link to={`/app/turnovers/${task.turnover.id}`} className="ws-link">
+                                {task.turnover.unit.property.name} · {task.turnover.unit.unit_label}
+                              </Link>
+                            </>
+                          )}
+                        </span>
+                      </span>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -132,34 +171,5 @@ export default function Schedule() {
         </section>
       )}
     </div>
-  )
-}
-
-function TaskLine({ task, onComplete, tone }: { task: TaskRow; onComplete: () => void; tone?: 'critical' }) {
-  return (
-    <li className={`flex items-center gap-3 py-2.5 ${tone === 'critical' ? 'bg-critical-50 px-4' : ''}`}>
-      <button
-        onClick={onComplete}
-        title="Mark done"
-        aria-label={`Mark ${task.title} done`}
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line-strong bg-surface text-transparent transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white"
-      >
-        <Check size={11} weight="bold" />
-      </button>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] text-ink">{task.title}</p>
-        <p className="truncate text-[11px] text-ink-faint">
-          {categoryLabels[task.category]}
-          {task.turnover && (
-            <>
-              {' · '}
-              <Link to={`/app/turnovers/${task.turnover.id}`} className="ws-link">
-                {task.turnover.unit.property.name} · {task.turnover.unit.unit_label}
-              </Link>
-            </>
-          )}
-        </p>
-      </div>
-    </li>
   )
 }

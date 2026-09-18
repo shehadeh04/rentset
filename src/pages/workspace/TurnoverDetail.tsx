@@ -53,7 +53,6 @@ export default function TurnoverDetail() {
   })
 
   const { data: tasks } = useTurnoverTasks(id!)
-
   const setStage = useSetTurnoverStage()
 
   const [moveOut, setMoveOut] = useState('')
@@ -86,10 +85,8 @@ export default function TurnoverDetail() {
 
   if (isLoading || !turnover) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-4 w-28" />
-        <Skeleton className="h-44 w-full" />
-        <Skeleton className="h-16 w-full" />
+      <div className="space-y-5">
+        <Skeleton className="h-[58svh] w-full" />
         <Skeleton className="h-64 w-full" />
       </div>
     )
@@ -112,176 +109,159 @@ export default function TurnoverDetail() {
     )
 
   return (
-    <div className="space-y-6">
-      <Link to="/app/turnovers" className="inline-flex items-center gap-1.5 text-[12px] text-ink-soft transition-colors hover:text-ink">
-        <ArrowLeft size={13} /> Turnovers
-      </Link>
+    <div className="space-y-5">
+      {/* Hero: the unit, full bleed. --------------------------------- */}
+      <section className="scene relative min-h-[58svh]">
+        <img src={unitPhoto(turnover.unit.id, 2000, 1200)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/92 via-ink/40 to-ink/30" aria-hidden="true" />
 
-      {/* Photo header: the unit as an object, not a text heading. */}
-      <header className="relative overflow-hidden rounded-lg bg-shell">
-        <img src={unitPhoto(turnover.unit.id, 1600, 500)} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-shell/25" aria-hidden="true" />
-        <div className="absolute inset-0 bg-gradient-to-t from-shell via-shell/70 to-transparent" aria-hidden="true" />
-        <div className="relative flex flex-col justify-end gap-4 p-5 pt-36 sm:p-6 sm:pt-44">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[12px] text-white/70">{turnover.unit.property.name}</p>
-              <h1 className="mt-0.5 truncate text-[1.5rem] font-semibold tracking-[-0.02em] text-white">
-                {turnover.unit.unit_label}
-              </h1>
-              <p
-                className={`mt-1.5 text-[12px] font-medium ${
-                  health.pastTarget ? 'text-critical-200' : 'text-white/80'
-                }`}
-              >
-                {health.headline}
-                {turnover.unit.monthly_rent ? ` · ${formatMoney(turnover.unit.monthly_rent)}/mo` : ''}
-              </p>
-            </div>
+        <div className="relative flex min-h-[58svh] flex-col justify-between p-5 sm:p-10">
+          <Link to="/app/turnovers" className="btn-glass self-start">
+            <ArrowLeft size={14} weight="bold" /> Turnovers
+          </Link>
 
-            <dl className="flex shrink-0 gap-6">
-              <div>
-                <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">Tasks</dt>
-                <dd className="mt-0.5 text-[18px] font-semibold tabular-nums text-white">
-                  {done}/{total}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">Overdue</dt>
-                <dd className={`mt-0.5 text-[18px] font-semibold tabular-nums ${overdue > 0 ? 'text-critical-200' : 'text-white'}`}>
-                  {overdue}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">Cost</dt>
-                <dd className="mt-0.5 text-[18px] font-semibold tabular-nums text-white">{formatMoney(cost)}</dd>
-              </div>
+          <div>
+            <p className="eyebrow text-white/50">{turnover.unit.property.name}</p>
+            <h1 className="display-1 mt-4 text-white">{turnover.unit.unit_label}</h1>
+            <p className={`lede mt-4 ${health.pastTarget ? 'text-critical-200' : 'text-white/75'}`}>
+              {health.headline}
+              {turnover.unit.monthly_rent ? ` · ${formatMoney(turnover.unit.monthly_rent)}/mo` : ''}
+            </p>
+
+            <dl className="mt-10 grid grid-cols-3 gap-6 border-t border-white/20 pt-6 sm:max-w-lg">
+              <HeroStat label="Tasks" value={`${done}/${total}`} />
+              <HeroStat label="Overdue" value={overdue} tone={overdue > 0 ? 'critical' : undefined} />
+              <HeroStat label="Cost" value={formatMoney(cost)} />
             </dl>
-          </div>
 
-          <div className="w-full">
-            <Progress value={done} total={total} tone={health.pastTarget ? 'critical' : 'brand'} />
+            <div className="mt-6 sm:max-w-lg">
+              <Progress value={done} total={total} tone={health.pastTarget ? 'critical' : 'brand'} />
+            </div>
           </div>
         </div>
-      </header>
+      </section>
 
-      <StageStepper current={turnover.stage} onSelect={move} disabled={setStage.isPending} />
+      <div className="px-2 sm:px-5">
+        <StageStepper current={turnover.stage} onSelect={move} disabled={setStage.isPending} />
 
-      <Tabs<TabId>
-        tabs={[
-          { id: 'overview', label: 'Overview' },
-          { id: 'timeline', label: 'Timeline' },
-          { id: 'tasks', label: 'Tasks', count: total },
-          { id: 'listing', label: 'Listing' },
-        ]}
-        active={tab}
-        onChange={setTab}
-      />
-
-      {tab === 'overview' && (
-        <div className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
-          <section className="min-w-0 space-y-5">
-            <div>
-              <h2 className="ws-section">Key dates</h2>
-              <p className="ws-meta mt-0.5">The whole checklist is scheduled from the move-out date.</p>
-              <div className="mt-3 grid gap-4 sm:grid-cols-3">
-                <div>
-                  <p className="ws-label">Notice given</p>
-                  <p className="mt-1.5 text-[13px] tabular-nums text-ink">{formatDate(turnover.notice_date)}</p>
-                </div>
-                <div>
-                  <label className="ws-label" htmlFor="move-out">
-                    Move-out
-                  </label>
-                  <input
-                    id="move-out"
-                    type="date"
-                    className="input mt-1.5"
-                    value={moveOut}
-                    onChange={(e) => setMoveOut(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="ws-label" htmlFor="target-ready">
-                    Target ready
-                  </label>
-                  <input
-                    id="target-ready"
-                    type="date"
-                    className="input mt-1.5"
-                    value={targetReady}
-                    onChange={(e) => setTargetReady(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="ws-section" htmlFor="notes">
-                Notes
-              </label>
-              <textarea
-                id="notes"
-                className="input mt-3 min-h-32 resize-y"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="What the plumber said, where the keys are, anything worth remembering."
-              />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button className="btn-primary btn-sm" onClick={() => saveDetails.mutate()} disabled={saveDetails.isPending}>
-                {saveDetails.isPending ? 'Saving…' : 'Save changes'}
-              </button>
-              {saveDetails.isError && (
-                <span className="flex items-center gap-1 text-[12px] font-medium text-critical-600">
-                  <WarningCircle size={14} weight="fill" /> Could not save
-                </span>
-              )}
-            </div>
-          </section>
-
-          <aside className="space-y-5 rounded border border-line bg-surface p-5">
-            <div>
-              <p className="ws-label">Current stage</p>
-              <p className="mt-1.5 text-[15px] font-semibold text-ink">{stageLabels[turnover.stage]}</p>
-              <p className="mt-1 text-[12px] leading-relaxed text-ink-soft">{stageBlurb[turnover.stage]}</p>
-            </div>
-
-            <div className="border-t border-line pt-4">
-              <p className="ws-label">Checklist</p>
-              <div className="mt-2">
-                <Progress value={done} total={total} tone={health.pastTarget ? 'critical' : 'brand'} />
-              </div>
-              <p className="mt-2 text-[12px] text-ink-soft">
-                {done} of {total} closed
-                {overdue > 0 && <span className="text-critical-600"> · {overdue} overdue</span>}
-              </p>
-              <button onClick={() => setTab('tasks')} className="mt-2.5 text-[12px] ws-link">
-                Open the checklist
-              </button>
-            </div>
-
-            <div className="border-t border-line pt-4">
-              <p className="ws-label">Tracked cost</p>
-              <p className="mt-1.5 text-metric font-semibold tabular-nums text-ink">{formatMoney(cost)}</p>
-              <p className="mt-0.5 text-[12px] text-ink-faint">Repairs, cleaning and vendor invoices on this turnover.</p>
-            </div>
-          </aside>
+        <div className="mt-10">
+          <Tabs<TabId>
+            tabs={[
+              { id: 'overview', label: 'Overview' },
+              { id: 'timeline', label: 'Timeline' },
+              { id: 'tasks', label: 'Tasks', count: total },
+              { id: 'listing', label: 'Listing' },
+            ]}
+            active={tab}
+            onChange={setTab}
+          />
         </div>
-      )}
 
-      {tab === 'timeline' && <Timeline turnoverId={turnover.id} moveOutDate={turnover.move_out_date} />}
-      {tab === 'tasks' && <Tasks turnoverId={turnover.id} landlordId={user!.id} />}
-      {tab === 'listing' && (
-        <ListingPanel
-          turnoverId={turnover.id}
-          landlordId={user!.id}
-          unitId={turnover.unit.id}
-          unitLabel={turnover.unit.unit_label}
-          propertyName={turnover.unit.property.name}
-        />
-      )}
+        <div className="py-10">
+          {tab === 'overview' && (
+            <div className="grid items-start gap-12 lg:grid-cols-[1.3fr_1fr] lg:gap-20">
+              <section className="min-w-0">
+                <h2 className="display-3">Key dates</h2>
+                <p className="ws-meta mt-3">The whole checklist is scheduled from the move-out date.</p>
+
+                <div className="mt-8 grid gap-6 sm:grid-cols-3">
+                  <div>
+                    <p className="ws-label">Notice given</p>
+                    <p className="mt-3 text-[18px] tabular-nums tracking-tight2">{formatDate(turnover.notice_date)}</p>
+                  </div>
+                  <div>
+                    <label className="ws-label" htmlFor="move-out">
+                      Move-out
+                    </label>
+                    <input id="move-out" type="date" className="input mt-3" value={moveOut} onChange={(e) => setMoveOut(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="ws-label" htmlFor="target-ready">
+                      Target ready
+                    </label>
+                    <input
+                      id="target-ready"
+                      type="date"
+                      className="input mt-3"
+                      value={targetReady}
+                      onChange={(e) => setTargetReady(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <h2 className="display-3 mt-14">Notes</h2>
+                <textarea
+                  className="input mt-6 min-h-36 resize-y"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="What the plumber said, where the keys are, anything worth remembering."
+                />
+
+                <div className="mt-6 flex items-center gap-4">
+                  <button className="btn-primary" onClick={() => saveDetails.mutate()} disabled={saveDetails.isPending}>
+                    {saveDetails.isPending ? 'Saving…' : 'Save changes'}
+                  </button>
+                  {saveDetails.isError && (
+                    <span className="flex items-center gap-1.5 text-[13px] font-medium text-critical-600">
+                      <WarningCircle size={15} weight="fill" /> Could not save
+                    </span>
+                  )}
+                </div>
+              </section>
+
+              <aside className="scene-clay p-6 sm:p-8">
+                <p className="eyebrow text-white/45">Current stage</p>
+                <p className="display-3 mt-4">{stageLabels[turnover.stage]}</p>
+                <p className="mt-3 text-[14px] leading-relaxed text-white/60">{stageBlurb[turnover.stage]}</p>
+
+                <div className="mt-8 border-t border-white/15 pt-6">
+                  <p className="eyebrow text-white/45">Checklist</p>
+                  <p className="mt-4 text-[40px] leading-none tracking-display tabular-nums">
+                    {done}
+                    <span className="text-white/40">/{total}</span>
+                  </p>
+                  <p className="mt-3 text-[13px] text-white/60">
+                    closed
+                    {overdue > 0 && <span className="text-critical-200"> · {overdue} overdue</span>}
+                  </p>
+                  <button onClick={() => setTab('tasks')} className="btn-glass mt-5">
+                    Open the checklist
+                  </button>
+                </div>
+
+                <div className="mt-8 border-t border-white/15 pt-6">
+                  <p className="eyebrow text-white/45">Tracked cost</p>
+                  <p className="mt-4 text-[40px] leading-none tracking-display tabular-nums">{formatMoney(cost)}</p>
+                  <p className="mt-3 text-[13px] text-white/60">Repairs, cleaning and vendor invoices on this turnover.</p>
+                </div>
+              </aside>
+            </div>
+          )}
+
+          {tab === 'timeline' && <Timeline turnoverId={turnover.id} moveOutDate={turnover.move_out_date} />}
+          {tab === 'tasks' && <Tasks turnoverId={turnover.id} landlordId={user!.id} />}
+          {tab === 'listing' && (
+            <ListingPanel
+              turnoverId={turnover.id}
+              landlordId={user!.id}
+              unitId={turnover.unit.id}
+              unitLabel={turnover.unit.unit_label}
+              propertyName={turnover.unit.property.name}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HeroStat({ label, value, tone }: { label: string; value: string | number; tone?: 'critical' }) {
+  return (
+    <div>
+      <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/45">{label}</dt>
+      <dd className={`mt-2 text-[28px] leading-none tracking-display tabular-nums ${tone === 'critical' ? 'text-critical-200' : 'text-white'}`}>
+        {value}
+      </dd>
     </div>
   )
 }
@@ -298,40 +278,32 @@ function StageStepper({
   const currentIndex = stageIndex(current)
 
   return (
-    <nav aria-label="Turnover stage" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-      <ol className="flex min-w-[640px] items-center">
+    <nav aria-label="Turnover stage" className="overflow-x-auto py-8">
+      <ol className="flex min-w-[720px] items-center gap-2">
         {STAGES.map((stage, i) => {
           const isCurrent = i === currentIndex
           const isDone = i < currentIndex
           return (
-            <li key={stage} className="flex flex-1 items-center">
+            <li key={stage} className="flex flex-1 items-center gap-2">
               <button
                 onClick={() => onSelect(stage)}
                 disabled={disabled}
                 aria-current={isCurrent ? 'step' : undefined}
-                className="group flex shrink-0 items-center gap-2 disabled:opacity-60"
+                className={`group flex shrink-0 items-center gap-2.5 rounded-pill px-4 py-2.5 transition-colors disabled:opacity-60 ${
+                  isCurrent ? 'bg-ink text-white' : isDone ? 'bg-ink/[0.08] text-ink' : 'text-ink-faint hover:bg-ink/[0.05]'
+                }`}
               >
                 <span
-                  className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${
-                    isDone
-                      ? 'bg-brand-500 text-white'
-                      : isCurrent
-                        ? 'bg-ink text-white'
-                        : 'border border-line-strong bg-surface text-ink-faint group-hover:border-ink-subtle'
+                  className={`flex h-5 w-5 items-center justify-center rounded-pill text-[10px] font-medium ${
+                    isDone ? 'bg-brand-500 text-white' : isCurrent ? 'bg-white/20 text-white' : 'border border-line'
                   }`}
                 >
-                  {isDone ? <Check size={11} weight="bold" /> : i + 1}
+                  {isDone ? <Check size={10} weight="bold" /> : i + 1}
                 </span>
-                <span
-                  className={`whitespace-nowrap text-[12px] transition-colors ${
-                    isCurrent ? 'font-semibold text-ink' : isDone ? 'font-medium text-ink-soft' : 'text-ink-faint group-hover:text-ink-soft'
-                  }`}
-                >
-                  {stageLabels[stage]}
-                </span>
+                <span className="whitespace-nowrap text-[14px] tracking-tight2">{stageLabels[stage]}</span>
               </button>
               {i < STAGES.length - 1 && (
-                <span className={`mx-2 h-px flex-1 ${i < currentIndex ? 'bg-brand-500' : 'bg-line'}`} aria-hidden="true" />
+                <span className={`h-px flex-1 ${i < currentIndex ? 'bg-brand-500' : 'bg-line'}`} aria-hidden="true" />
               )}
             </li>
           )

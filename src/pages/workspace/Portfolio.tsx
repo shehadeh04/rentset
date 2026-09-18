@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bed, Buildings, MapPin, Plus, Ruler, Shower, SquaresFour, Rows } from '@phosphor-icons/react'
+import { ArrowUpRight, Plus, Rows, SquaresFour } from '@phosphor-icons/react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { useProperties, type PropertyRow, type UnitRow } from '@/lib/workspace-data'
@@ -9,6 +9,7 @@ import { addDays, formatMoney, todayISO } from '@/lib/format'
 import { buildTemplateTasks } from '@/lib/checklist-template'
 import { stageLabels } from '@/lib/turnover'
 import { propertyPhoto, unitPhoto } from '@/lib/photos'
+import { marketingImages } from '@/lib/images'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/Skeleton'
 import { useToast } from '@/components/ui/Toast'
@@ -25,15 +26,15 @@ const statusFilters: { id: StatusFilter; label: string }[] = [
 
 function unitState(unit: UnitRow) {
   const open = unit.turnovers.find((t) => t.stage !== 'leased')
-  if (unit.status === 'turnover' && open) return { label: stageLabels[open.stage], tone: 'state-brand', turnoverId: open.id }
-  if (unit.status === 'vacant') return { label: 'Vacant', tone: 'state-caution', turnoverId: null }
-  return { label: 'Occupied', tone: 'state-positive', turnoverId: null }
+  if (unit.status === 'turnover' && open) return { label: stageLabels[open.stage], turnoverId: open.id }
+  if (unit.status === 'vacant') return { label: 'Vacant', turnoverId: null }
+  return { label: 'Occupied', turnoverId: null }
 }
 
 export default function Portfolio() {
   const { user } = useAuth()
   const { data: properties, isLoading } = useProperties()
-  const [view, setView] = useState<'gallery' | 'table'>('gallery')
+  const [view, setView] = useState<'gallery' | 'list'>('gallery')
   const [status, setStatus] = useState<StatusFilter>('all')
   const [query, setQuery] = useState('')
   const [addProperty, setAddProperty] = useState(false)
@@ -57,35 +58,36 @@ export default function Portfolio() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-9 w-56" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-60 w-full" />
-          ))}
-        </div>
+      <div className="space-y-5">
+        <Skeleton className="h-[42svh] w-full" />
+        <Skeleton className="h-80 w-full" />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="ws-title">Portfolio</h1>
-          <p className="mt-1 text-[13px] text-ink-soft">
+    <div className="space-y-5">
+      <section className="scene relative min-h-[42svh]">
+        <img src={marketingImages.rooftops.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/45 to-ink/25" aria-hidden="true" />
+        <div className="relative flex min-h-[42svh] flex-col justify-end p-5 sm:p-10">
+          <p className="eyebrow text-white/50">Your portfolio</p>
+          <h1 className="display-1 mt-4 text-white">
+            {properties && properties.length > 0 ? `${totalUnits} unit${totalUnits === 1 ? '' : 's'}` : 'Portfolio'}
+          </h1>
+          <p className="lede mt-5 max-w-[42ch] text-white/75">
             {properties && properties.length > 0
-              ? `${properties.length} propert${properties.length === 1 ? 'y' : 'ies'} · ${totalUnits} unit${totalUnits === 1 ? '' : 's'}`
+              ? `Across ${properties.length} propert${properties.length === 1 ? 'y' : 'ies'}.`
               : 'Your properties and the units inside them.'}
           </p>
+          <button className="btn-light mt-8 self-start" onClick={() => setAddProperty(true)}>
+            Add property <Plus size={15} weight="bold" />
+          </button>
         </div>
-        <button className="btn-primary btn-sm" onClick={() => setAddProperty(true)}>
-          <Plus size={15} weight="bold" /> Add property
-        </button>
-      </div>
+      </section>
 
       {properties && properties.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-2 py-6 sm:px-5">
           <div className="flex flex-wrap items-center gap-2">
             <div className="seg">
               {statusFilters.map((filter) => (
@@ -98,65 +100,61 @@ export default function Portfolio() {
                 </button>
               ))}
             </div>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Filter units"
-              className="input h-[34px] w-44 py-1"
-            />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Filter units" className="input w-48" />
           </div>
 
           <div className="seg">
             <button onClick={() => setView('gallery')} className={`seg-item ${view === 'gallery' ? 'seg-item-active' : ''}`}>
               <SquaresFour size={14} weight="bold" /> Gallery
             </button>
-            <button onClick={() => setView('table')} className={`seg-item ${view === 'table' ? 'seg-item-active' : ''}`}>
-              <Rows size={14} weight="bold" /> Table
+            <button onClick={() => setView('list')} className={`seg-item ${view === 'list' ? 'seg-item-active' : ''}`}>
+              <Rows size={14} weight="bold" /> List
             </button>
           </div>
         </div>
       )}
 
       {properties?.length === 0 && (
-        <div className="flex flex-col items-center rounded border border-line bg-surface px-6 py-16 text-center">
-          <Buildings size={24} className="text-ink-subtle" />
-          <p className="mt-3 text-[13px] font-medium text-ink">No properties yet</p>
-          <p className="mt-1 max-w-xs text-[12px] text-ink-faint">
+        <section className="scene-navy px-5 py-20 text-center sm:px-10">
+          <h2 className="display-2">No properties yet</h2>
+          <p className="lede mx-auto mt-5 max-w-[38ch] text-white/60">
             Add your first property, then add the units inside it.
           </p>
-          <button className="btn-primary btn-sm mt-5" onClick={() => setAddProperty(true)}>
-            <Plus size={15} weight="bold" /> Add property
+          <button className="btn-light mt-8" onClick={() => setAddProperty(true)}>
+            Add property <Plus size={15} weight="bold" />
           </button>
-        </div>
+        </section>
       )}
 
-      {view === 'table' && filtered.length > 0 && <UnitTable properties={filtered} landlordId={user!.id} />}
+      {view === 'list' && filtered.length > 0 && <UnitList properties={filtered} landlordId={user!.id} />}
 
       {view === 'gallery' &&
         filtered.map((property) => (
-          <section key={property.id} className="space-y-3">
-            <header className="flex flex-wrap items-center gap-3 border-b border-line pb-3">
-              <img
-                src={propertyPhoto(property.id, 160, 160)}
-                alt=""
-                loading="lazy"
-                className="h-11 w-11 shrink-0 rounded object-cover"
-              />
-              <div className="min-w-0 flex-1">
-                <h2 className="truncate text-[14px] font-semibold text-ink">{property.name}</h2>
-                <p className="flex items-center gap-1 truncate text-[12px] text-ink-faint">
-                  <MapPin size={11} /> {property.address_line1}, {property.city}, {property.state}
-                </p>
+          <section key={property.id} className="px-2 pb-12 sm:px-5">
+            <header className="flex flex-wrap items-end justify-between gap-5 border-t border-line pt-8">
+              <div className="flex items-center gap-5">
+                <img
+                  src={propertyPhoto(property.id, 220, 220)}
+                  alt=""
+                  loading="lazy"
+                  className="h-20 w-20 shrink-0 rounded-lg object-cover"
+                />
+                <div className="min-w-0">
+                  <h2 className="display-3">{property.name}</h2>
+                  <p className="mt-2 text-[13px] text-ink-faint">
+                    {property.address_line1}, {property.city}, {property.state}
+                  </p>
+                </div>
               </div>
-              <button className="btn-ghost btn-sm shrink-0" onClick={() => setAddUnitTo(property)}>
-                <Plus size={14} weight="bold" /> Add unit
+              <button className="btn-secondary btn-sm shrink-0" onClick={() => setAddUnitTo(property)}>
+                Add unit <Plus size={14} weight="bold" />
               </button>
             </header>
 
             {property.units.length === 0 ? (
-              <p className="py-4 text-[12px] text-ink-faint">No units in this property yet.</p>
+              <p className="py-10 text-[14px] text-ink-faint">No units in this property yet.</p>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="mt-8 grid gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {property.units.map((unit) => (
                   <UnitCard key={unit.id} unit={unit} landlordId={user!.id} />
                 ))}
@@ -166,9 +164,7 @@ export default function Portfolio() {
         ))}
 
       {filtered.length === 0 && properties && properties.length > 0 && (
-        <p className="rounded border border-line bg-surface px-4 py-10 text-center text-[13px] text-ink-faint">
-          No units match those filters.
-        </p>
+        <p className="px-5 py-16 text-center text-[15px] text-ink-faint">No units match those filters.</p>
       )}
 
       <AddPropertyModal open={addProperty} onClose={() => setAddProperty(false)} landlordId={user!.id} />
@@ -228,52 +224,39 @@ function UnitCard({ unit, landlordId }: { unit: UnitRow; landlordId: string }) {
   const state = unitState(unit)
 
   return (
-    <article className="group overflow-hidden rounded border border-line bg-surface transition-shadow hover:shadow-card">
-      <div className="relative h-36 overflow-hidden bg-sunken">
-        <img
-          src={unitPhoto(unit.id, 480, 300)}
-          alt=""
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-        />
-        <span className="absolute left-2.5 top-2.5 rounded-sm bg-surface/95 px-2 py-1 backdrop-blur">
-          <span className={`state ${state.tone}`}>{state.label}</span>
+    <article className="scene group relative min-h-[320px]">
+      <img
+        src={unitPhoto(unit.id, 900, 700)}
+        alt=""
+        loading="lazy"
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/30 to-transparent" aria-hidden="true" />
+
+      <div className="relative flex min-h-[320px] flex-col justify-end p-5 text-white">
+        <span className="absolute left-5 top-5 flex items-center gap-2 rounded-pill bg-white/15 px-3 py-1.5 text-[12px] font-medium backdrop-blur-md">
+          {state.label}
         </span>
-      </div>
 
-      <div className="p-3.5">
-        <div className="flex items-baseline justify-between gap-2">
-          <h3 className="truncate text-[13px] font-semibold text-ink">{unit.unit_label}</h3>
-          <span className="shrink-0 text-[13px] font-medium tabular-nums text-ink">
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <h3 className="display-3">{unit.unit_label}</h3>
+            <p className="mt-2 text-[13px] text-white/65">
+              {unit.bedrooms} bd · {unit.bathrooms} ba{unit.square_feet ? ` · ${unit.square_feet} ft²` : ''}
+            </p>
+          </div>
+          <p className="shrink-0 text-[20px] tabular-nums tracking-display">
             {unit.monthly_rent ? formatMoney(unit.monthly_rent) : '—'}
-          </span>
+          </p>
         </div>
 
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-faint">
-          <span className="flex items-center gap-1">
-            <Bed size={12} /> {unit.bedrooms} bd
-          </span>
-          <span className="flex items-center gap-1">
-            <Shower size={12} /> {unit.bathrooms} ba
-          </span>
-          {unit.square_feet && (
-            <span className="flex items-center gap-1">
-              <Ruler size={12} /> {unit.square_feet} ft²
-            </span>
-          )}
-        </div>
-
-        <div className="mt-3.5">
+        <div className="mt-6">
           {state.turnoverId ? (
-            <Link to={`/app/turnovers/${state.turnoverId}`} className="btn-secondary btn-sm w-full">
-              Open turnover
+            <Link to={`/app/turnovers/${state.turnoverId}`} className="btn-light">
+              Open turnover <ArrowUpRight size={14} weight="bold" />
             </Link>
           ) : (
-            <button
-              className="btn-secondary btn-sm w-full"
-              onClick={() => start.mutate(unit.id)}
-              disabled={start.isPending}
-            >
+            <button className="btn-glass" onClick={() => start.mutate(unit.id)} disabled={start.isPending}>
               {start.isPending ? 'Starting…' : 'Start turnover'}
             </button>
           )}
@@ -283,67 +266,46 @@ function UnitCard({ unit, landlordId }: { unit: UnitRow; landlordId: string }) {
   )
 }
 
-function UnitTable({ properties, landlordId }: { properties: PropertyRow[]; landlordId: string }) {
+function UnitList({ properties, landlordId }: { properties: PropertyRow[]; landlordId: string }) {
   const start = useStartTurnover(landlordId)
 
   return (
-    <div className="overflow-x-auto rounded border border-line bg-surface">
-      <table className="w-full min-w-[760px] border-collapse">
-        <thead>
-          <tr className="border-b border-line">
-            <th className="tbl-head px-4 py-2.5 text-left">Unit</th>
-            <th className="tbl-head px-4 py-2.5 text-left">Property</th>
-            <th className="tbl-head px-4 py-2.5 text-left">Layout</th>
-            <th className="tbl-head px-4 py-2.5 text-right">Rent</th>
-            <th className="tbl-head px-4 py-2.5 text-left">Status</th>
-            <th className="tbl-head px-4 py-2.5 text-right">Action</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-line">
-          {properties.flatMap((property) =>
-            property.units.map((unit) => {
-              const state = unitState(unit)
-              return (
-                <tr key={unit.id} className="tbl-row">
-                  <td className="px-4 py-2.5">
-                    <div className="flex items-center gap-2.5">
-                      <img src={unitPhoto(unit.id, 80, 80)} alt="" loading="lazy" className="h-8 w-8 shrink-0 rounded object-cover" />
-                      <span className="text-[13px] font-medium text-ink">{unit.unit_label}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2.5 text-[12px] text-ink-soft">{property.name}</td>
-                  <td className="px-4 py-2.5 text-[12px] text-ink-soft">
-                    {unit.bedrooms} bd · {unit.bathrooms} ba
-                    {unit.square_feet ? ` · ${unit.square_feet} ft²` : ''}
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-[12px] tabular-nums text-ink-soft">
-                    {unit.monthly_rent ? formatMoney(unit.monthly_rent) : '—'}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <span className={`state ${state.tone}`}>{state.label}</span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right">
-                    {state.turnoverId ? (
-                      <Link to={`/app/turnovers/${state.turnoverId}`} className="text-[12px] ws-link">
-                        Open
-                      </Link>
-                    ) : (
-                      <button
-                        className="text-[12px] ws-link"
-                        onClick={() => start.mutate(unit.id)}
-                        disabled={start.isPending}
-                      >
-                        Start turnover
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              )
-            })
-          )}
-        </tbody>
-      </table>
-    </div>
+    <section className="px-2 pb-10 sm:px-5">
+      <ul>
+        {properties.flatMap((property) =>
+          property.units.map((unit) => {
+            const state = unitState(unit)
+            return (
+              <li key={unit.id} className="flex flex-wrap items-center gap-5 border-t border-line py-5">
+                <img src={unitPhoto(unit.id, 200, 200)} alt="" loading="lazy" className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+                <span className="min-w-[10rem] flex-1">
+                  <span className="display-4 block">{unit.unit_label}</span>
+                  <span className="mt-1 block text-[13px] text-ink-faint">{property.name}</span>
+                </span>
+                <span className="hidden w-40 shrink-0 text-[13px] text-ink-faint sm:block">
+                  {unit.bedrooms} bd · {unit.bathrooms} ba{unit.square_feet ? ` · ${unit.square_feet} ft²` : ''}
+                </span>
+                <span className="w-24 shrink-0 text-[15px] tabular-nums tracking-tight2">
+                  {unit.monthly_rent ? formatMoney(unit.monthly_rent) : '—'}
+                </span>
+                <span className="w-28 shrink-0 text-[13px] text-ink-soft">{state.label}</span>
+                <span className="shrink-0">
+                  {state.turnoverId ? (
+                    <Link to={`/app/turnovers/${state.turnoverId}`} className="btn-secondary btn-sm">
+                      Open
+                    </Link>
+                  ) : (
+                    <button className="btn-secondary btn-sm" onClick={() => start.mutate(unit.id)} disabled={start.isPending}>
+                      Start turnover
+                    </button>
+                  )}
+                </span>
+              </li>
+            )
+          })
+        )}
+      </ul>
+    </section>
   )
 }
 
@@ -385,7 +347,7 @@ function AddPropertyModal({ open, onClose, landlordId }: { open: boolean; onClos
     <Modal open={open} onClose={onClose} title="Add a property" description="The building or address. Units come next.">
       <form
         id="add-property"
-        className="grid gap-4 sm:grid-cols-2"
+        className="grid gap-5 sm:grid-cols-2"
         onSubmit={(e) => {
           e.preventDefault()
           mutation.mutate()
@@ -414,11 +376,11 @@ function AddPropertyModal({ open, onClose, landlordId }: { open: boolean; onClos
           </div>
         </div>
       </form>
-      <div className="mt-5 flex items-center gap-3">
-        <button type="submit" form="add-property" className="btn-primary btn-sm" disabled={mutation.isPending}>
+      <div className="mt-6 flex items-center gap-3">
+        <button type="submit" form="add-property" className="btn-primary" disabled={mutation.isPending}>
           {mutation.isPending ? 'Saving…' : 'Save property'}
         </button>
-        <button type="button" className="btn-ghost btn-sm" onClick={onClose}>
+        <button type="button" className="btn-ghost" onClick={onClose}>
           Cancel
         </button>
       </div>
@@ -464,7 +426,7 @@ function AddUnitModal({ property, onClose, landlordId }: { property: PropertyRow
     <Modal open={property !== null} onClose={onClose} title="Add a unit" description={property?.name}>
       <form
         id="add-unit"
-        className="grid gap-4 sm:grid-cols-2"
+        className="grid gap-5 sm:grid-cols-2"
         onSubmit={(e) => {
           e.preventDefault()
           mutation.mutate()
@@ -495,11 +457,11 @@ function AddUnitModal({ property, onClose, landlordId }: { property: PropertyRow
           </div>
         </div>
       </form>
-      <div className="mt-5 flex items-center gap-3">
-        <button type="submit" form="add-unit" className="btn-primary btn-sm" disabled={mutation.isPending}>
+      <div className="mt-6 flex items-center gap-3">
+        <button type="submit" form="add-unit" className="btn-primary" disabled={mutation.isPending}>
           {mutation.isPending ? 'Saving…' : 'Save unit'}
         </button>
-        <button type="button" className="btn-ghost btn-sm" onClick={onClose}>
+        <button type="button" className="btn-ghost" onClick={onClose}>
           Cancel
         </button>
       </div>

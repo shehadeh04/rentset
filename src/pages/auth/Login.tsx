@@ -42,10 +42,7 @@ export default function Login() {
   }
 
   return (
-    <AuthLayout>
-      <h1 className="text-3xl font-medium tracking-tight text-ink">Log in</h1>
-      <p className="mt-1 text-sm text-ink-soft">Welcome back.</p>
-
+    <AuthLayout title="Log in" intro="Welcome back.">
       {!supabaseConfigured && (
         <p className="mt-4 rounded-sm bg-caution-50 px-3 py-2.5 text-sm text-caution-700">
           Accounts are not connected yet. This form will work once the database is wired up.

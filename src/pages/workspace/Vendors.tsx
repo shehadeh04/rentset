@@ -4,6 +4,7 @@ import { EnvelopeSimple, MapPin, Phone, Plus, Wrench } from '@phosphor-icons/rea
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { useVendors, type VendorRow } from '@/lib/workspace-data'
+import { marketingImages } from '@/lib/images'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/Skeleton'
 import { useToast } from '@/components/ui/Toast'
@@ -39,78 +40,81 @@ export default function Vendors() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="ws-title">Vendors</h1>
-          <p className="mt-1 text-[13px] text-ink-soft">
+    <div className="space-y-5">
+      <section className="scene relative min-h-[42svh]">
+        <img src={marketingImages.kitchen.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/45 to-ink/30" aria-hidden="true" />
+        <div className="relative flex min-h-[42svh] flex-col justify-end p-5 sm:p-10">
+          <p className="eyebrow text-white/50">Who you call</p>
+          <h1 className="display-1 mt-4 text-white">Vendors</h1>
+          <p className="lede mt-5 max-w-[44ch] text-white/75">
             {vendors && vendors.length > 0
               ? `${vendors.length} contact${vendors.length === 1 ? '' : 's'} you can assign turnover work to.`
               : 'The contractors and cleaners you assign turnover work to.'}
           </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <button className="btn-light" onClick={() => setAdding(true)}>
+              Add vendor <Plus size={14} weight="bold" />
+            </button>
+            <button className="btn-glass" onClick={() => setSearching(true)}>
+              <MapPin size={14} weight="bold" /> Find nearby
+            </button>
+          </div>
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <button className="btn-secondary btn-sm" onClick={() => setSearching(true)}>
-            <MapPin size={14} weight="bold" /> Find nearby
-          </button>
-          <button className="btn-primary btn-sm" onClick={() => setAdding(true)}>
-            <Plus size={14} weight="bold" /> Add vendor
-          </button>
-        </div>
-      </div>
+      </section>
 
       {vendors && vendors.length > 0 && (
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name, trade or number"
-          className="input h-[34px] max-w-xs py-1"
-        />
+        <div className="px-2 py-6 sm:px-5">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name, trade or number"
+            className="input max-w-sm"
+          />
+        </div>
       )}
 
       {vendors?.length === 0 && (
-        <div className="flex flex-col items-center rounded border border-line bg-surface px-6 py-16 text-center">
-          <Wrench size={24} className="text-ink-subtle" />
-          <p className="mt-3 text-[13px] font-medium text-ink">No vendors yet</p>
-          <p className="mt-1 max-w-xs text-[12px] text-ink-faint">
+        <section className="scene-navy px-5 py-20 text-center sm:px-10">
+          <Wrench size={26} className="mx-auto text-white/50" />
+          <h2 className="display-2 mt-6">No vendors yet</h2>
+          <p className="lede mx-auto mt-5 max-w-[40ch] text-white/60">
             Add the people you actually call, then assign them to tasks inside a turnover.
           </p>
-          <button className="btn-primary btn-sm mt-5" onClick={() => setAdding(true)}>
-            <Plus size={14} weight="bold" /> Add vendor
+          <button className="btn-light mt-8" onClick={() => setAdding(true)}>
+            Add vendor <Plus size={14} weight="bold" />
           </button>
-        </div>
+        </section>
       )}
 
       {vendors && vendors.length > 0 && grouped.length === 0 && (
-        <p className="rounded border border-line bg-surface px-4 py-10 text-center text-[13px] text-ink-faint">
-          No vendor matches “{query}”.
-        </p>
+        <p className="px-5 py-16 text-center text-[15px] text-ink-faint">No vendor matches “{query}”.</p>
       )}
 
       {grouped.map(([trade, list]) => (
-        <section key={trade}>
-          <h2 className="ws-label border-b border-line pb-2">
-            {trade} <span className="ml-1 text-ink-subtle">{list.length}</span>
+        <section key={trade} className="px-2 pb-10 sm:px-5">
+          <h2 className="display-4 border-t border-line pt-6">
+            {trade} <span className="ml-2 text-[14px] text-ink-faint">{list.length}</span>
           </h2>
-          <ul className="divide-y divide-line">
+          <ul className="mt-4">
             {list.map((vendor) => (
-              <li key={vendor.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-sunken text-[12px] font-semibold uppercase text-ink-soft">
+              <li key={vendor.id} className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-line py-5">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-pill bg-ink text-[14px] font-medium uppercase text-white">
                   {vendor.name.slice(0, 2)}
                 </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium text-ink">{vendor.name}</p>
-                  <p className="truncate text-[11px] text-ink-faint">{vendor.trade || 'General'}</p>
+                <div className="min-w-[8rem] flex-1">
+                  <p className="display-4 truncate">{vendor.name}</p>
+                  <p className="mt-1 truncate text-[13px] text-ink-faint">{vendor.trade || 'General'}</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px]">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[14px]">
                   {vendor.phone && (
-                    <a href={`tel:${vendor.phone}`} className="flex items-center gap-1.5 ws-link">
-                      <Phone size={13} className="text-ink-faint" /> {vendor.phone}
+                    <a href={`tel:${vendor.phone}`} className="flex items-center gap-2 ws-link">
+                      <Phone size={14} className="text-ink-faint" /> {vendor.phone}
                     </a>
                   )}
                   {vendor.email && (
-                    <a href={`mailto:${vendor.email}`} className="flex items-center gap-1.5 ws-link">
-                      <EnvelopeSimple size={13} className="text-ink-faint" /> {vendor.email}
+                    <a href={`mailto:${vendor.email}`} className="flex items-center gap-2 ws-link">
+                      <EnvelopeSimple size={14} className="text-ink-faint" /> {vendor.email}
                     </a>
                   )}
                 </div>

@@ -1,238 +1,90 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import type { Icon } from '@phosphor-icons/react'
-import {
-  ArrowUpRight,
-  Broom,
-  CalendarBlank,
-  CaretDown,
-  ChartLineUp,
-  ClipboardText,
-  House,
-  List,
-  Wrench,
-  X,
-} from '@phosphor-icons/react'
+import { ArrowUpRight, X } from '@phosphor-icons/react'
 import { Logo } from '@/components/Logo'
 
-interface NavLeaf {
-  label: string
-  to: string
-  description?: string
-  icon?: Icon
-}
-
-interface NavGroup {
-  label: string
-  items: NavLeaf[]
-}
-
-const productItems: NavLeaf[] = [
-  { label: 'Inspections', to: '/#product', description: 'Checklists that become repair tasks', icon: ClipboardText },
-  { label: 'Repairs & vendors', to: '/#product', description: 'Assign work, track cost and status', icon: Wrench },
-  { label: 'Cleaning', to: '/#product', description: 'Scheduled, confirmed, done', icon: Broom },
-  { label: 'Scheduling', to: '/#product', description: 'Every due date in one list', icon: CalendarBlank },
-  { label: 'Listings', to: '/#product', description: 'Drafted early, published on time', icon: House },
-  { label: 'Turnover history', to: '/#numbers', description: 'What each unit actually took', icon: ChartLineUp },
+const menuLinks = [
+  { label: 'Home', to: '/' },
+  { label: 'How it works', to: '/#how-it-works' },
+  { label: 'The product', to: '/#product' },
+  { label: 'Resources', to: '/resources' },
+  { label: 'About', to: '/about' },
 ]
 
-const stageItems: NavLeaf[] = [
-  { label: 'Notice', to: '/?stage=0#how-it-works' },
-  { label: 'Inspection', to: '/?stage=1#how-it-works' },
-  { label: 'Repairs', to: '/?stage=2#how-it-works' },
-  { label: 'Cleaning', to: '/?stage=3#how-it-works' },
-  { label: 'Listing', to: '/?stage=4#how-it-works' },
-  { label: 'Leased', to: '/?stage=5#how-it-works' },
-]
-
-const resourceItems: NavLeaf[] = [
-  { label: 'Turnover checklist', to: '/resources', description: 'The 14 steps RentSet sets up for you' },
-  { label: 'Common questions', to: '/resources#faq', description: 'What the product does and does not do' },
-]
-
-const groups: NavGroup[] = [
-  { label: 'Product', items: productItems },
-  { label: 'How it works', items: stageItems },
-  { label: 'Resources', items: resourceItems },
-]
-
-function Dropdown({ group, wide }: { group: NavGroup; wide: boolean }) {
+export function SiteNav() {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const location = useLocation()
+
+  useEffect(() => setOpen(false), [location.pathname, location.hash, location.search])
 
   useEffect(() => {
-    if (!open) return
-    function onPointerDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onPointerDown)
-    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = open ? 'hidden' : ''
     return () => {
-      document.removeEventListener('mousedown', onPointerDown)
-      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
     }
   }, [open])
 
   return (
-    <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="true"
-        className="flex items-center gap-1 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
-      >
-        {group.label}
-        <CaretDown size={12} weight="bold" className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
+    <>
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-start justify-between gap-3 p-3 sm:p-5">
+        <button
+          onClick={() => setOpen(true)}
+          className="btn-light pointer-events-auto shadow-card"
+          aria-expanded={open}
+          aria-label="Open menu"
+        >
+          Menu
+        </button>
+
+        <Link to="/" aria-label="RentSet home" className="pointer-events-auto">
+          <Logo size={46} />
+        </Link>
+
+        <Link to="/signup" className="btn-primary pointer-events-auto shadow-card">
+          Get started
+        </Link>
+      </header>
 
       {open && (
-        <div
-          className={`absolute left-0 top-full z-50 animate-fade-in rounded-lg border border-line bg-surface p-2 shadow-lifted ${
-            wide ? 'w-[30rem]' : 'w-64'
-          }`}
-        >
-          <div className={wide ? 'grid grid-cols-2 gap-1' : 'grid gap-1'}>
-            {group.items.map((item) => (
-              <Link
-                key={item.label + item.to}
-                to={item.to}
-                onClick={() => setOpen(false)}
-                className="flex items-start gap-2.5 rounded-md p-2.5 transition-colors hover:bg-sunken"
-              >
-                {item.icon && <item.icon size={17} weight="regular" className="mt-0.5 shrink-0 text-ink" />}
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-medium text-ink">{item.label}</span>
-                  {item.description && (
-                    <span className="mt-0.5 block text-xs leading-snug text-ink-faint">{item.description}</span>
-                  )}
-                </span>
-              </Link>
-            ))}
+        <div className="fixed inset-0 z-50 flex animate-overlay-in flex-col bg-ink text-white">
+          <div className="flex items-start justify-between gap-3 p-3 sm:p-5">
+            <button onClick={() => setOpen(false)} className="btn-glass" aria-label="Close menu">
+              <X size={15} weight="bold" /> Close
+            </button>
+            <Logo size={46} light />
+            <Link to="/signup" className="btn-light">
+              Get started
+            </Link>
           </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
-export function SiteNav() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [openGroup, setOpenGroup] = useState<string | null>('Product')
-  const location = useLocation()
-
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [location.pathname, location.hash, location.search])
-
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : ''
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [mobileOpen])
-
-  const isHome = location.pathname === '/'
-
-  return (
-    <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur">
-      <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between gap-6 px-6 lg:px-10">
-        <div className="flex items-center gap-10">
-          <Link to="/" aria-label="RentSet home">
-            <Logo />
-          </Link>
-          <nav className="hidden items-center gap-6 lg:flex">
-            <Link
-              to="/"
-              className={`py-2 text-sm transition-colors hover:text-ink ${isHome ? 'font-medium text-ink' : 'text-ink-soft'}`}
-            >
-              Home
-            </Link>
-            {groups.map((g) => (
-              <Dropdown key={g.label} group={g} wide={g.label === 'Product'} />
-            ))}
-            <Link
-              to="/about"
-              className={`py-2 text-sm transition-colors hover:text-ink ${
-                location.pathname === '/about' ? 'font-medium text-ink' : 'text-ink-soft'
-              }`}
-            >
-              About
-            </Link>
+          <nav className="flex flex-1 flex-col justify-center px-5 sm:px-10">
+            <ul>
+              {menuLinks.map((link, i) => (
+                <li key={link.label} className="animate-rise border-b border-white/15" style={{ animationDelay: `${i * 45}ms` }}>
+                  <Link
+                    to={link.to}
+                    onClick={() => setOpen(false)}
+                    className="group flex items-baseline justify-between gap-6 py-4 sm:py-6"
+                  >
+                    <span className="display-2 transition-opacity group-hover:opacity-60">{link.label}</span>
+                    <ArrowUpRight
+                      size={22}
+                      className="shrink-0 self-center opacity-40 transition-all group-hover:translate-x-1 group-hover:opacity-100"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </nav>
-        </div>
 
-        <div className="flex items-center gap-1 sm:gap-2">
-          <Link to="/login" className="btn-ghost hidden px-3 sm:inline-flex sm:px-5">
-            Log in
-          </Link>
-          <Link to="/signup" className="btn-secondary px-3.5 sm:px-5">
-            <ArrowUpRight size={15} weight="bold" />
-            <span className="hidden sm:inline">Get started free</span>
-            <span className="sm:hidden">Get started</span>
-          </Link>
-          <button
-            className="icon-btn lg:hidden"
-            onClick={() => setMobileOpen((v) => !v)}
-            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={mobileOpen}
-          >
-            {mobileOpen ? <X size={20} weight="regular" /> : <List size={20} weight="regular" />}
-          </button>
-        </div>
-      </div>
-
-      {mobileOpen && (
-        <div className="max-h-[calc(100dvh-5rem)] animate-fade-in overflow-y-auto border-t border-line bg-canvas px-6 pb-10 pt-4 lg:hidden">
-          <Link to="/" className="block py-3 text-sm font-medium text-ink">
-            Home
-          </Link>
-          {groups.map((g) => {
-            const expanded = openGroup === g.label
-            return (
-              <div key={g.label} className="border-t border-line">
-                <button
-                  className="flex w-full items-center justify-between py-3 text-sm font-medium text-ink"
-                  onClick={() => setOpenGroup(expanded ? null : g.label)}
-                  aria-expanded={expanded}
-                >
-                  {g.label}
-                  <CaretDown size={13} weight="bold" className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                </button>
-                {expanded && (
-                  <div className="grid gap-0.5 pb-3">
-                    {g.items.map((item) => (
-                      <Link
-                        key={item.label + item.to}
-                        to={item.to}
-                        className="flex items-center gap-2.5 rounded-md px-2 py-2.5 text-[13px] text-ink-soft hover:bg-sunken hover:text-ink"
-                      >
-                        {item.icon && <item.icon size={16} weight="regular" className="shrink-0" />}
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-          <div className="border-t border-line">
-            <Link to="/about" className="block py-3 text-sm font-medium text-ink">
-              About
-            </Link>
-          </div>
-          <div className="mt-5 grid gap-2 border-t border-line pt-5">
-            <Link to="/login" className="btn-secondary w-full">
+          <div className="flex flex-wrap items-center gap-3 p-5 sm:p-10">
+            <Link to="/login" className="btn-glass">
               Log in
             </Link>
-            <Link to="/signup" className="btn-primary w-full">
-              Get started free
-            </Link>
+            <span className="text-[13px] text-white/50">Free to start, no credit card required.</span>
           </div>
         </div>
       )}
-    </header>
+    </>
   )
 }

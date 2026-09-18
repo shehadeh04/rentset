@@ -52,7 +52,7 @@ const faqs = [
 
 export default function Resources() {
   return (
-    <div className="min-h-[100dvh] bg-canvas">
+    <div className="min-h-[100dvh] bg-paper pt-24 sm:pt-28">
       <SiteNav />
 
       <main>

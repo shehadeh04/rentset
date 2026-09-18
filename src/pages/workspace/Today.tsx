@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Buildings, Check, CheckCircle, Plus, WarningCircle } from '@phosphor-icons/react'
+import { ArrowUpRight, Check } from '@phosphor-icons/react'
 import { useAllTasks, useAllTurnovers, useCompleteTask, useProperties, taskRollup } from '@/lib/workspace-data'
 import { addDays, daysBetween, formatDate, formatMoney, todayISO } from '@/lib/format'
 import { stageLabels, turnoverHealth } from '@/lib/turnover'
 import { unitPhoto } from '@/lib/photos'
+import { marketingImages } from '@/lib/images'
 import { categoryLabels } from '@/lib/task-categories'
 import { Progress } from '@/components/ui/Progress'
 import { Skeleton } from '@/components/Skeleton'
@@ -33,11 +34,7 @@ export default function Today() {
   const completeTask = useCompleteTask()
 
   const rollup = useMemo(() => taskRollup(tasks, today), [tasks, today])
-
-  const active = useMemo(
-    () => (turnovers ?? []).filter((t) => t.stage !== 'leased'),
-    [turnovers]
-  )
+  const active = useMemo(() => (turnovers ?? []).filter((t) => t.stage !== 'leased'), [turnovers])
 
   const metrics = useMemo(() => {
     const open = (tasks ?? []).filter((t) => t.status !== 'done')
@@ -56,8 +53,8 @@ export default function Today() {
 
   const attention = useMemo(() => {
     const items: AttentionItem[] = []
-
     const overdueByTurnover = new Map<string, { count: number; label: string; oldest: string }>()
+
     for (const task of tasks ?? []) {
       if (task.status === 'done' || !task.due_date || task.due_date >= today || !task.turnover) continue
       const key = task.turnover.id
@@ -76,7 +73,6 @@ export default function Today() {
         turnoverId,
       })
     }
-
     for (const turnover of active) {
       const health = turnoverHealth(turnover)
       const label = `${turnover.unit.property.name} · ${turnover.unit.unit_label}`
@@ -98,14 +94,10 @@ export default function Today() {
         })
       }
     }
-
     return items.sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'critical' ? -1 : 1))
   }, [tasks, active, today])
 
-  const dueToday = useMemo(
-    () => (tasks ?? []).filter((t) => t.status !== 'done' && t.due_date === today),
-    [tasks, today]
-  )
+  const dueToday = useMemo(() => (tasks ?? []).filter((t) => t.status !== 'done' && t.due_date === today), [tasks, today])
 
   const upcoming = useMemo(() => {
     const horizon = addDays(today, 30)
@@ -127,310 +119,279 @@ export default function Today() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        <Skeleton className="h-9 w-64" />
-        <Skeleton className="h-20 w-full" />
-        <div className="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
-          <Skeleton className="h-80 w-full" />
-          <Skeleton className="h-80 w-full" />
-        </div>
+      <div className="space-y-5">
+        <Skeleton className="h-[60svh] w-full" />
+        <Skeleton className="h-40 w-full" />
       </div>
     )
   }
 
   if (properties && properties.length === 0) {
     return (
-      <div className="mx-auto max-w-lg py-16 text-center">
-        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-shell">
-          <Buildings size={22} weight="fill" className="text-white" />
-        </span>
-        <h1 className="mt-5 ws-title">Set up your portfolio</h1>
-        <p className="mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-ink-soft">
-          Add your first property and its units. Once a tenant gives notice you can open a turnover and RentSet will
-          build the schedule for you.
-        </p>
-        <Link to="/app/portfolio" className="btn-primary mt-6">
-          <Plus size={15} weight="bold" /> Add a property
-        </Link>
-      </div>
+      <section className="scene relative min-h-[70svh]">
+        <img src={marketingImages.emptyRoom.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-ink/65" aria-hidden="true" />
+        <div className="relative flex min-h-[70svh] flex-col justify-end p-5 sm:p-10">
+          <h1 className="display-1 max-w-[14ch] text-white">Set up your portfolio</h1>
+          <p className="lede mt-6 max-w-[46ch] text-white/70">
+            Add your first property and its units. Once a tenant gives notice, open a turnover and RentSet builds the
+            schedule for you.
+          </p>
+          <Link to="/app/portfolio" className="btn-light mt-8 self-start">
+            Add a property <ArrowUpRight size={15} weight="bold" />
+          </Link>
+        </div>
+      </section>
     )
   }
 
+  const lead = active[0]
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="ws-title">{greeting()}</h1>
-          <p className="mt-1 text-[13px] text-ink-soft">
+    <div className="space-y-5">
+      {/* Hero scene ---------------------------------------------------- */}
+      <section className="scene relative min-h-[64svh]">
+        <img
+          src={lead ? unitPhoto(lead.unit.id, 2000, 1100) : marketingImages.lounge.src}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/40 to-ink/25" aria-hidden="true" />
+
+        <div className="relative flex min-h-[64svh] flex-col justify-end p-5 sm:p-10">
+          <p className="eyebrow text-white/50">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-            {attention.length === 0 ? ' · nothing is behind schedule' : ` · ${attention.length} thing${attention.length === 1 ? '' : 's'} need attention`}
           </p>
+          <h1 className="display-1 mt-4 text-white">{greeting()}</h1>
+          <p className="lede mt-5 max-w-[44ch] text-white/75">
+            {attention.length === 0
+              ? 'Nothing is behind schedule. Every task is inside its due date.'
+              : `${attention.length} thing${attention.length === 1 ? '' : 's'} need your attention today.`}
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/app/turnovers" className="btn-light">
+              Open the board <ArrowUpRight size={15} weight="bold" />
+            </Link>
+            <Link to="/app/schedule" className="btn-glass">
+              Full schedule
+            </Link>
+          </div>
         </div>
-        <Link to="/app/turnovers" className="btn-secondary btn-sm">
-          Open the board <ArrowRight size={14} weight="bold" />
-        </Link>
-      </div>
+      </section>
 
-      {/* Editorial metric strip: hairline rules, not a row of boxes. */}
-      <dl className="grid grid-cols-2 border-y border-line sm:grid-cols-4 sm:divide-x sm:divide-line">
-        <Metric label="Active turnovers" value={metrics.active} sub={`${unitCounts.total} unit${unitCounts.total === 1 ? '' : 's'} total`} />
-        <Metric label="Due today" value={metrics.dueToday} sub={metrics.dueToday === 0 ? 'Clear' : 'Tasks to close'} />
-        <Metric
-          label="Overdue"
-          value={metrics.overdue}
-          sub={metrics.overdue === 0 ? 'On schedule' : 'Past due date'}
-          tone={metrics.overdue > 0 ? 'critical' : undefined}
-        />
-        <Metric
-          label="Tracked cost"
-          value={formatMoney(metrics.cost)}
-          sub={metrics.avgDays === null ? 'No closed turnovers yet' : `${metrics.avgDays}d average turnover`}
-        />
-      </dl>
+      {/* Metrics ------------------------------------------------------- */}
+      <section className="px-2 py-14 sm:px-5 sm:py-20">
+        <dl className="grid gap-10 border-t border-line pt-10 sm:grid-cols-2 lg:grid-cols-4">
+          <Metric label="Active turnovers" value={metrics.active} sub={`${unitCounts.total} unit${unitCounts.total === 1 ? '' : 's'} total`} />
+          <Metric label="Due today" value={metrics.dueToday} sub={metrics.dueToday === 0 ? 'Clear' : 'Tasks to close'} />
+          <Metric label="Overdue" value={metrics.overdue} sub={metrics.overdue === 0 ? 'On schedule' : 'Past due date'} tone={metrics.overdue > 0 ? 'critical' : undefined} />
+          <Metric
+            label="Tracked cost"
+            value={formatMoney(metrics.cost)}
+            sub={metrics.avgDays === null ? 'No closed turnovers yet' : `${metrics.avgDays}d average turnover`}
+          />
+        </dl>
+      </section>
 
-      <div className="grid items-start gap-10 lg:grid-cols-[1.55fr_1fr]">
-        <div className="min-w-0 space-y-9">
-          <section>
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className="ws-section">Needs attention</h2>
-              {attention.length > 0 && <span className="ws-meta">{attention.length} open</span>}
-            </div>
-
-            {attention.length === 0 ? (
-              <div className="mt-3 flex items-center gap-3 rounded border border-line bg-surface px-4 py-5">
-                <CheckCircle size={20} weight="fill" className="shrink-0 text-positive-500" />
-                <div>
-                  <p className="text-[13px] font-medium text-ink">Everything is on schedule</p>
-                  <p className="ws-meta">No overdue tasks and no turnover past its target date.</p>
-                </div>
-              </div>
-            ) : (
-              <ul className="mt-3 divide-y divide-line border-y border-line">
-                {attention.map((item) => (
-                  <li key={item.id}>
-                    <Link
-                      to={`/app/turnovers/${item.turnoverId}`}
-                      className="group flex items-start gap-3 py-3.5 transition-colors hover:bg-surface"
-                    >
-                      <WarningCircle
-                        size={17}
-                        weight="fill"
-                        className={`mt-0.5 shrink-0 ${item.tone === 'critical' ? 'text-critical-500' : 'text-caution-500'}`}
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] font-medium text-ink">{item.headline}</span>
-                        <span className="block truncate text-[12px] text-ink-faint">{item.detail}</span>
-                      </span>
-                      <ArrowRight
-                        size={15}
-                        className="mt-0.5 shrink-0 text-ink-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-ink-soft"
-                      />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section>
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className="ws-section">Due today</h2>
-              <Link to="/app/schedule" className="text-[12px] ws-link">
-                Full schedule
-              </Link>
-            </div>
-
-            {dueToday.length === 0 ? (
-              <p className="mt-3 border-y border-line py-5 text-[13px] text-ink-faint">
-                Nothing is due today.
-              </p>
-            ) : (
-              <ul className="mt-3 divide-y divide-line border-y border-line">
-                {dueToday.map((task) => (
-                  <li key={task.id} className="flex items-center gap-3 py-2.5">
-                    <button
-                      onClick={() => completeTask.mutate(task.id)}
-                      disabled={completeTask.isPending}
-                      title="Mark done"
-                      aria-label={`Mark ${task.title} done`}
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line-strong text-transparent transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white"
-                    >
-                      <Check size={11} weight="bold" />
-                    </button>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] text-ink">{task.title}</span>
-                      <span className="block truncate text-[11px] text-ink-faint">
-                        {categoryLabels[task.category]}
-                        {task.turnover && ` · ${task.turnover.unit.property.name} · ${task.turnover.unit.unit_label}`}
-                      </span>
-                    </span>
-                    {task.turnover && (
-                      <Link to={`/app/turnovers/${task.turnover.id}`} className="shrink-0 text-[12px] ws-link">
-                        Open
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          {upcoming.length > 0 && (
-            <section>
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="ws-section">Coming up</h2>
-                <span className="ws-meta">Next 30 days</span>
-              </div>
-              <ul className="mt-3 divide-y divide-line border-y border-line">
-                {upcoming.map((task) => {
-                  const due = new Date(task.due_date + 'T00:00:00')
-                  const inDays = daysBetween(today, task.due_date!)
-                  return (
-                    <li key={task.id} className="flex items-center gap-3 py-2.5">
-                      <span className="w-12 shrink-0">
-                        <span className="block text-[11px] font-medium uppercase tracking-wide text-ink-faint">
-                          {due.toLocaleDateString('en-US', { month: 'short' })}
-                        </span>
-                        <span className="block text-[14px] font-semibold leading-tight tabular-nums text-ink-soft">
-                          {due.getDate()}
-                        </span>
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] text-ink">{task.title}</span>
-                        <span className="block truncate text-[11px] text-ink-faint">
-                          {categoryLabels[task.category]}
-                          {task.turnover && ` · ${task.turnover.unit.unit_label}`}
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-[11px] text-ink-faint">in {inDays}d</span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </section>
-          )}
-        </div>
-
-        <div className="min-w-0 space-y-9">
-          <section>
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className="ws-section">Active turnovers</h2>
-              <Link to="/app/turnovers" className="text-[12px] ws-link">
-                All
-              </Link>
-            </div>
-
-            {active.length === 0 ? (
-              <p className="mt-3 rounded border border-line bg-surface px-4 py-5 text-[13px] text-ink-faint">
-                No turnover is open right now.
-              </p>
-            ) : (
-              <ul className="mt-3 space-y-2.5">
-                {active.map((turnover) => {
-                  const counts = rollup.get(turnover.id) ?? { done: 0, total: 0, overdue: 0, cost: 0 }
-                  const health = turnoverHealth(turnover)
-                  return (
-                    <li key={turnover.id}>
-                      <Link
-                        to={`/app/turnovers/${turnover.id}`}
-                        className="group flex gap-3 overflow-hidden rounded border border-line bg-surface p-2.5 transition-colors hover:border-line-strong"
-                      >
-                        <img
-                          src={unitPhoto(turnover.unit.id, 160, 160)}
-                          alt=""
-                          loading="lazy"
-                          className="h-16 w-16 shrink-0 rounded object-cover"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="flex items-center justify-between gap-2">
-                            <span className="truncate text-[13px] font-medium text-ink">{turnover.unit.unit_label}</span>
-                            <span className={`state ${health.pastTarget ? 'state-critical' : 'state-brand'} shrink-0`}>
-                              {stageLabels[turnover.stage]}
-                            </span>
-                          </span>
-                          <span className="block truncate text-[11px] text-ink-faint">{turnover.unit.property.name}</span>
-                          <span className="mt-2 block">
-                            <Progress
-                              value={counts.done}
-                              total={counts.total}
-                              tone={health.pastTarget ? 'critical' : 'brand'}
-                            />
-                          </span>
-                          <span className="mt-1.5 flex items-center justify-between gap-2 text-[11px] text-ink-faint">
-                            <span>
-                              {counts.done}/{counts.total} tasks
-                            </span>
-                            <span className={health.pastTarget ? 'font-medium text-critical-600' : ''}>{health.headline}</span>
-                          </span>
-                        </span>
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </section>
-
-          {unitCounts.total > 0 && (
-            <section>
-              <h2 className="ws-section">Portfolio</h2>
-              <div className="mt-3 rounded border border-line bg-surface p-4">
-                <div className="flex h-2 overflow-hidden rounded-full bg-line">
-                  {unitCounts.occupied > 0 && (
-                    <div className="bg-ink" style={{ width: `${(unitCounts.occupied / unitCounts.total) * 100}%` }} />
-                  )}
-                  {unitCounts.turnover > 0 && (
-                    <div className="bg-brand-500" style={{ width: `${(unitCounts.turnover / unitCounts.total) * 100}%` }} />
-                  )}
-                  {unitCounts.vacant > 0 && (
-                    <div className="bg-caution-300" style={{ width: `${(unitCounts.vacant / unitCounts.total) * 100}%` }} />
-                  )}
-                </div>
-                <dl className="mt-4 space-y-2">
-                  <LegendRow swatch="bg-ink" label="Occupied" value={unitCounts.occupied} />
-                  <LegendRow swatch="bg-brand-500" label="In turnover" value={unitCounts.turnover} />
-                  <LegendRow swatch="bg-caution-300" label="Vacant" value={unitCounts.vacant} />
-                </dl>
-                <Link to="/app/portfolio" className="mt-4 flex items-center gap-1 text-[12px] ws-link">
-                  View portfolio <ArrowRight size={12} weight="bold" />
+      {/* Needs attention ----------------------------------------------- */}
+      {attention.length > 0 ? (
+        <section className="scene-clay px-5 py-14 sm:px-10 sm:py-20">
+          <p className="eyebrow text-white/45">Needs attention</p>
+          <h2 className="display-2 mt-5 max-w-[16ch]">
+            {attention.length} thing{attention.length === 1 ? '' : 's'} behind
+          </h2>
+          <ul className="mt-12">
+            {attention.map((item) => (
+              <li key={item.id} className="border-t border-white/15">
+                <Link to={`/app/turnovers/${item.turnoverId}`} className="group flex items-center justify-between gap-6 py-5">
+                  <span className="min-w-0">
+                    <span className="display-4 block transition-opacity group-hover:opacity-70">{item.headline}</span>
+                    <span className="mt-1.5 block truncate text-[13px] text-white/55">{item.detail}</span>
+                  </span>
+                  <ArrowUpRight size={20} className="shrink-0 opacity-40 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
                 </Link>
-              </div>
-            </section>
-          )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : (
+        <section className="scene-navy px-5 py-14 sm:px-10 sm:py-20">
+          <p className="eyebrow text-white/45">Needs attention</p>
+          <h2 className="display-2 mt-5 max-w-[18ch]">Everything is on schedule</h2>
+          <p className="lede mt-6 max-w-[42ch] text-white/60">
+            No overdue tasks, and no turnover is past its target date.
+          </p>
+        </section>
+      )}
+
+      {/* Due today ------------------------------------------------------ */}
+      <section className="px-2 py-14 sm:px-5 sm:py-20">
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
+          <h2 className="display-3">Due today</h2>
+          <Link to="/app/schedule" className="btn-secondary btn-sm">
+            Full schedule
+          </Link>
         </div>
-      </div>
+
+        {dueToday.length === 0 ? (
+          <p className="lede mt-8 border-t border-line pt-8 text-ink-faint">Nothing is due today.</p>
+        ) : (
+          <ul className="mt-8">
+            {dueToday.map((task) => (
+              <li key={task.id} className="flex items-center gap-4 border-t border-line py-4">
+                <button
+                  onClick={() => completeTask.mutate(task.id)}
+                  disabled={completeTask.isPending}
+                  aria-label={`Mark ${task.title} done`}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-pill border border-line text-transparent transition-colors hover:border-ink hover:bg-ink hover:text-white"
+                >
+                  <Check size={13} weight="bold" />
+                </button>
+                <span className="min-w-0 flex-1">
+                  <span className="display-4 block truncate">{task.title}</span>
+                  <span className="mt-1 block truncate text-[13px] text-ink-faint">
+                    {categoryLabels[task.category]}
+                    {task.turnover && ` · ${task.turnover.unit.property.name} · ${task.turnover.unit.unit_label}`}
+                  </span>
+                </span>
+                {task.turnover && (
+                  <Link to={`/app/turnovers/${task.turnover.id}`} className="btn-ghost btn-sm shrink-0">
+                    Open
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* Active turnovers ---------------------------------------------- */}
+      {active.length > 0 && (
+        <section className="px-2 pb-14 sm:px-5 sm:pb-20">
+          <div className="flex flex-wrap items-baseline justify-between gap-4">
+            <h2 className="display-3">Active turnovers</h2>
+            <Link to="/app/turnovers" className="btn-secondary btn-sm">
+              All turnovers
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {active.map((turnover) => {
+              const counts = rollup.get(turnover.id) ?? { done: 0, total: 0, overdue: 0, cost: 0 }
+              const health = turnoverHealth(turnover)
+              return (
+                <Link key={turnover.id} to={`/app/turnovers/${turnover.id}`} className="scene group relative min-h-[300px]">
+                  <img
+                    src={unitPhoto(turnover.unit.id, 900, 700)}
+                    alt=""
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                  />
+                  <span className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/30 to-transparent" aria-hidden="true" />
+                  <span className="relative flex min-h-[300px] flex-col justify-end p-5 text-white">
+                    <span className="flex items-center gap-2 text-[12px] font-medium">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
+                      {stageLabels[turnover.stage]}
+                    </span>
+                    <span className="display-3 mt-2 block">{turnover.unit.unit_label}</span>
+                    <span className="mt-1 block text-[13px] text-white/65">{turnover.unit.property.name}</span>
+                    <span className="mt-5 block">
+                      <Progress value={counts.done} total={counts.total} tone={health.pastTarget ? 'critical' : 'brand'} />
+                    </span>
+                    <span className="mt-2.5 flex items-center justify-between gap-3 text-[12px] text-white/65">
+                      <span>
+                        {counts.done}/{counts.total} tasks
+                      </span>
+                      <span className={health.pastTarget ? 'font-medium text-critical-200' : ''}>{health.headline}</span>
+                    </span>
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Coming up ------------------------------------------------------ */}
+      {upcoming.length > 0 && (
+        <section className="px-2 pb-14 sm:px-5 sm:pb-20">
+          <div className="flex flex-wrap items-baseline justify-between gap-4">
+            <h2 className="display-3">Coming up</h2>
+            <span className="ws-meta">Next 30 days</span>
+          </div>
+          <ul className="mt-8">
+            {upcoming.map((task) => {
+              const due = new Date(task.due_date + 'T00:00:00')
+              return (
+                <li key={task.id} className="flex items-center gap-5 border-t border-line py-4">
+                  <span className="w-16 shrink-0">
+                    <span className="block text-[11px] uppercase tracking-[0.14em] text-ink-faint">
+                      {due.toLocaleDateString('en-US', { month: 'short' })}
+                    </span>
+                    <span className="block text-[24px] leading-none tracking-display tabular-nums">{due.getDate()}</span>
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] tracking-tight2">{task.title}</span>
+                    <span className="mt-0.5 block truncate text-[12px] text-ink-faint">
+                      {categoryLabels[task.category]}
+                      {task.turnover && ` · ${task.turnover.unit.unit_label}`}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-[12px] text-ink-faint">in {daysBetween(today, task.due_date!)}d</span>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
+
+      {/* Portfolio band ------------------------------------------------- */}
+      {unitCounts.total > 0 && (
+        <section className="scene-dark px-5 py-14 sm:px-10 sm:py-20">
+          <p className="eyebrow text-white/45">Portfolio</p>
+          <h2 className="display-2 mt-5">
+            {unitCounts.total} unit{unitCounts.total === 1 ? '' : 's'}
+          </h2>
+
+          <div className="mt-10 flex h-1.5 overflow-hidden rounded-pill bg-white/15">
+            {unitCounts.occupied > 0 && <div className="bg-white" style={{ width: `${(unitCounts.occupied / unitCounts.total) * 100}%` }} />}
+            {unitCounts.turnover > 0 && <div className="bg-brand-300" style={{ width: `${(unitCounts.turnover / unitCounts.total) * 100}%` }} />}
+            {unitCounts.vacant > 0 && <div className="bg-caution-300" style={{ width: `${(unitCounts.vacant / unitCounts.total) * 100}%` }} />}
+          </div>
+
+          <dl className="mt-8 grid gap-6 sm:grid-cols-3">
+            <LegendRow swatch="bg-white" label="Occupied" value={unitCounts.occupied} />
+            <LegendRow swatch="bg-brand-300" label="In turnover" value={unitCounts.turnover} />
+            <LegendRow swatch="bg-caution-300" label="Vacant" value={unitCounts.vacant} />
+          </dl>
+
+          <Link to="/app/portfolio" className="btn-light mt-10 self-start">
+            View portfolio <ArrowUpRight size={15} weight="bold" />
+          </Link>
+        </section>
+      )}
     </div>
   )
 }
 
-function Metric({
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  label: string
-  value: string | number
-  sub: string
-  tone?: 'critical'
-}) {
+function Metric({ label, value, sub, tone }: { label: string; value: string | number; sub: string; tone?: 'critical' }) {
   return (
-    <div className="px-1 py-4 first:pl-0 sm:px-5 sm:first:pl-0">
+    <div>
       <dt className="ws-label">{label}</dt>
-      <dd className={`mt-1.5 text-metric font-semibold tabular-nums ${tone === 'critical' ? 'text-critical-600' : 'text-ink'}`}>
+      <dd className={`mt-4 text-[clamp(2.5rem,5vw,4rem)] font-normal leading-none tracking-display tabular-nums ${tone === 'critical' ? 'text-critical-600' : ''}`}>
         {value}
       </dd>
-      <dd className="mt-0.5 text-[11px] text-ink-faint">{sub}</dd>
+      <dd className="mt-3 text-[13px] text-ink-faint">{sub}</dd>
     </div>
   )
 }
 
 function LegendRow({ swatch, label, value }: { swatch: string; label: string; value: number }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className={`h-2 w-2 shrink-0 rounded-full ${swatch}`} />
-      <dt className="flex-1 text-[12px] text-ink-soft">{label}</dt>
-      <dd className="text-[12px] font-medium tabular-nums text-ink">{value}</dd>
+    <div className="flex items-baseline gap-3 border-t border-white/15 pt-4">
+      <span className={`h-2 w-2 shrink-0 translate-y-[-2px] rounded-full ${swatch}`} />
+      <dt className="flex-1 text-[14px] text-white/65">{label}</dt>
+      <dd className="text-[24px] leading-none tracking-display tabular-nums">{value}</dd>
     </div>
   )
 }

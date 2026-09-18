@@ -67,20 +67,21 @@ export default function Settings() {
   })
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="ws-title">Settings</h1>
-        <p className="mt-1 text-[13px] text-ink-soft">Your profile, account and session.</p>
+    <div className="space-y-10 px-2 sm:px-5">
+      <div className="border-b border-line pb-8">
+        <p className="eyebrow text-ink-faint">Account</p>
+        <h1 className="display-1 mt-4">Settings</h1>
+        <p className="lede mt-4 max-w-[40ch] text-ink-soft">Your profile, account and session.</p>
       </div>
 
-      <div className="grid items-start gap-8 md:grid-cols-[180px_1fr]">
+      <div className="grid items-start gap-10 md:grid-cols-[200px_1fr] md:gap-16">
         <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
           {sections.map((item) => (
             <button
               key={item.id}
               onClick={() => setSection(item.id)}
-              className={`flex shrink-0 items-center gap-2.5 rounded px-3 py-2 text-left text-[13px] transition-colors ${
-                section === item.id ? 'bg-ink font-medium text-white' : 'text-ink-soft hover:bg-sunken hover:text-ink'
+              className={`flex shrink-0 items-center gap-2.5 rounded-pill px-4 py-2.5 text-left text-[14px] tracking-tight2 transition-colors ${
+                section === item.id ? 'bg-ink font-medium text-white' : 'text-ink-soft hover:bg-ink/[0.06] hover:text-ink'
               }`}
             >
               <item.icon size={15} weight={section === item.id ? 'fill' : 'regular'} />

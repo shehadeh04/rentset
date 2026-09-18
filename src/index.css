@@ -1,4 +1,4 @@
-@import '@fontsource-variable/geist';
+@import '@fontsource-variable/instrument-sans';
 
 @tailwind base;
 @tailwind components;
@@ -10,7 +10,8 @@
   }
 
   body {
-    @apply bg-canvas text-ink font-sans antialiased;
+    @apply bg-paper text-ink font-sans antialiased;
+    letter-spacing: -0.01em;
   }
 
   ::selection {
@@ -18,7 +19,7 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-ink ring-offset-2 ring-offset-canvas;
+    @apply outline-none ring-2 ring-ink ring-offset-2 ring-offset-paper;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -34,103 +35,129 @@
 }
 
 @layer components {
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-5 py-2.5 text-sm font-medium transition-colors duration-150 disabled:opacity-40 disabled:pointer-events-none;
+  /* ------------------------------------------------------------------ */
+  /* Editorial type. Display sizes run at regular weight with -0.03em    */
+  /* tracking and 1.0 leading; weight never carries the emphasis.        */
+  /* ------------------------------------------------------------------ */
+  .display-1 {
+    @apply text-d1 font-normal;
   }
-  .btn-primary {
-    @apply btn bg-ink text-white hover:bg-[#262626];
+  .display-2 {
+    @apply text-d2 font-normal;
   }
-  .btn-secondary {
-    @apply btn border border-line-strong bg-surface text-ink hover:border-ink;
+  .display-3 {
+    @apply text-d3 font-normal;
   }
-  .btn-ghost {
-    @apply btn text-ink-soft hover:bg-sunken hover:text-ink;
+  .display-4 {
+    @apply text-d4 font-normal;
   }
-  .btn-sm {
-    @apply px-3.5 py-2 text-[13px];
+  .lede {
+    @apply text-[clamp(0.95rem,1.35vw,1.125rem)] leading-[1.5] tracking-tight2;
   }
-  .icon-btn {
-    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-ink-soft transition-colors hover:bg-sunken hover:text-ink disabled:opacity-40 disabled:pointer-events-none;
+  .eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-[0.14em];
   }
-
-  .field-label {
-    @apply mb-1.5 block text-[13px] font-medium text-ink;
-  }
-  .field-input {
-    @apply w-full rounded-md border border-line-strong bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint transition-colors focus:border-ink focus:outline-none disabled:bg-sunken disabled:text-ink-faint;
-  }
-  .field-error {
-    @apply mt-1.5 flex items-center gap-1 text-xs font-medium text-critical-600;
-  }
-
-  .panel {
-    @apply rounded-lg border border-line bg-surface;
-  }
-
-  .badge {
-    @apply inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide;
-  }
-  .badge-neutral {
-    @apply badge border border-line-strong text-ink-soft;
-  }
-  .badge-positive {
-    @apply badge bg-positive-50 text-positive-700;
-  }
-  .badge-caution {
-    @apply badge bg-caution-50 text-caution-700;
-  }
-  .badge-critical {
-    @apply badge bg-critical-50 text-critical-700;
-  }
-  .badge-ink {
-    @apply badge bg-ink text-white;
-  }
-
-  .chip {
-    @apply inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-1.5 text-[13px] text-ink-soft transition-colors hover:border-ink-subtle;
-  }
-  .chip-active {
-    @apply chip border-ink bg-ink text-white hover:border-ink;
-  }
-
-  .skeleton {
-    @apply relative overflow-hidden rounded-sm bg-line/70;
-  }
-  .skeleton::after {
-    content: '';
-    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent;
-    animation: shimmer 1.6s infinite;
-  }
-
-  /* ---------------------------------------------------------------- */
-  /* Workspace system. Denser and squarer than the marketing surface:  */
-  /* hairline rules and whitespace carry the structure instead of      */
-  /* stacked bordered cards.                                           */
-  /* ---------------------------------------------------------------- */
-
   .ws-title {
-    @apply text-[1.375rem] font-semibold tracking-[-0.015em] text-ink;
+    @apply text-d3 font-normal;
   }
   .ws-section {
-    @apply text-[0.8125rem] font-semibold tracking-[-0.01em] text-ink;
+    @apply text-d4 font-normal;
   }
   .ws-label {
-    @apply text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint;
+    @apply text-[11px] font-medium uppercase tracking-[0.14em] text-ink-faint;
   }
   .ws-meta {
-    @apply text-[12px] leading-5 text-ink-faint;
+    @apply text-[13px] leading-[1.5] text-ink-faint;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Pills. Every control is a pill; the page furniture floats.          */
+  /* ------------------------------------------------------------------ */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-pill px-5 py-2.5 text-[13px] font-medium tracking-tight2 transition-all duration-200 disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-ink text-white hover:bg-ink/85;
+  }
+  .btn-secondary {
+    @apply btn bg-ink/[0.06] text-ink hover:bg-ink/[0.12];
+  }
+  .btn-ghost {
+    @apply btn text-ink-soft hover:bg-ink/[0.06] hover:text-ink;
+  }
+  .btn-brand {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+  }
+  .btn-sm {
+    @apply px-4 py-2 text-[12px];
+  }
+  .btn-light {
+    @apply btn bg-white/90 text-ink backdrop-blur hover:bg-white;
+  }
+  /* Translucent chip laid over photography. */
+  .btn-glass {
+    @apply btn bg-white/15 text-white backdrop-blur-md hover:bg-white/25;
+  }
+  .icon-btn {
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-pill text-ink-soft transition-colors hover:bg-ink/[0.06] hover:text-ink disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Scenes: full-bleed blocks that carry a colour or a photograph.      */
+  /* ------------------------------------------------------------------ */
+  .scene {
+    @apply relative overflow-hidden rounded-lg;
+  }
+  .scene-dark {
+    @apply scene bg-ink text-white;
+  }
+  .scene-navy {
+    @apply scene bg-navy text-white;
+  }
+  .scene-clay {
+    @apply scene bg-clay text-white;
+  }
+  .scene-paper {
+    @apply scene bg-paper text-ink;
+  }
+  .scene-white {
+    @apply scene bg-surface text-ink;
   }
 
   .surface {
-    @apply rounded border border-line bg-surface;
+    @apply rounded-lg border border-line bg-surface;
   }
   .surface-flat {
     @apply border border-line bg-surface;
   }
+  .panel {
+    @apply rounded-lg border border-line bg-surface;
+  }
 
-  /* Status: a quiet dot + sentence case, not a shouty uppercase chip. */
+  /* ------------------------------------------------------------------ */
+  /* Form fields                                                         */
+  /* ------------------------------------------------------------------ */
+  .field-label,
+  .input-label {
+    @apply mb-2 block text-[11px] font-medium uppercase tracking-[0.14em] text-ink-faint;
+  }
+  .field-input,
+  .input {
+    @apply w-full rounded-pill border border-line bg-surface px-4 py-2.5 text-[14px] tracking-tight2 text-ink placeholder:text-ink-faint transition-colors focus:border-ink focus:outline-none disabled:bg-sunken disabled:text-ink-faint;
+  }
+  textarea.field-input,
+  textarea.input {
+    @apply rounded-lg;
+  }
+  .field-error {
+    @apply mt-2 flex items-center gap-1.5 text-[12px] font-medium text-critical-600;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Status: a dot and sentence case, never a loud chip.                 */
+  /* ------------------------------------------------------------------ */
   .state {
-    @apply inline-flex items-center gap-1.5 whitespace-nowrap text-[12px] font-medium text-ink-soft;
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap text-[12px] font-medium tracking-tight2 text-ink-soft;
   }
   .state::before {
     content: '';
@@ -149,38 +176,58 @@
     @apply bg-critical-500;
   }
 
-  .btn-brand {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-pill px-2.5 py-1 text-[11px] font-medium tracking-tight2;
+  }
+  .badge-neutral {
+    @apply badge bg-ink/[0.06] text-ink-soft;
+  }
+  .badge-positive {
+    @apply badge bg-positive-50 text-positive-700;
+  }
+  .badge-caution {
+    @apply badge bg-caution-50 text-caution-700;
+  }
+  .badge-critical {
+    @apply badge bg-critical-50 text-critical-700;
+  }
+  .badge-ink {
+    @apply badge bg-ink text-white;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-pill border border-line bg-surface px-4 py-2 text-[13px] tracking-tight2 text-ink-soft transition-colors hover:border-ink-subtle;
+  }
+  .chip-active {
+    @apply chip border-ink bg-ink text-white hover:border-ink;
   }
 
-  /* Dense input, for tool surfaces rather than marketing forms. */
-  .input {
-    @apply w-full rounded border border-line-strong bg-surface px-3 py-2 text-[13px] text-ink placeholder:text-ink-faint transition-colors focus:border-ink focus:outline-none disabled:bg-sunken disabled:text-ink-faint;
-  }
-  .input-label {
-    @apply mb-1.5 block text-[12px] font-medium text-ink-soft;
-  }
-
-  /* Segmented control for view switching. */
+  /* Segmented control */
   .seg {
-    @apply inline-flex items-center gap-0.5 rounded border border-line bg-surface p-0.5;
+    @apply inline-flex items-center gap-0.5 rounded-pill bg-ink/[0.06] p-1;
   }
   .seg-item {
-    @apply inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[12px] font-medium text-ink-soft transition-colors hover:text-ink;
+    @apply inline-flex items-center gap-1.5 rounded-pill px-3.5 py-1.5 text-[12px] font-medium tracking-tight2 text-ink-soft transition-colors hover:text-ink;
   }
   .seg-item-active {
     @apply bg-ink text-white hover:text-white;
   }
 
-  /* Data tables. */
   .tbl-head {
-    @apply text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint;
+    @apply text-[11px] font-medium uppercase tracking-[0.14em] text-ink-faint;
   }
   .tbl-row {
-    @apply transition-colors hover:bg-deck;
+    @apply transition-colors hover:bg-paper;
+  }
+  .ws-link {
+    @apply text-ink-soft underline-offset-4 transition-colors hover:text-ink hover:underline;
   }
 
-  .ws-link {
-    @apply text-ink-soft underline-offset-2 transition-colors hover:text-ink hover:underline;
+  .skeleton {
+    @apply relative overflow-hidden rounded-lg bg-ink/[0.07];
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent;
+    animation: shimmer 1.6s infinite;
   }
 }

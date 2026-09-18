@@ -25,7 +25,7 @@ const principles = [
 
 export default function About() {
   return (
-    <div className="min-h-[100dvh] bg-canvas">
+    <div className="min-h-[100dvh] bg-paper pt-24 sm:pt-28">
       <SiteNav />
 
       <main>
